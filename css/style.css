@@ -68,3 +68,7 @@
 
 /* Aba Crédito: usa as mesmas cores, ícones, cards e tabelas do Resumo */
 .metric-text{font-size:clamp(17px,1.65vw,25px);overflow-wrap:anywhere}.evolution-chart{width:100%;margin-top:20px;min-height:200px}.evolution-chart svg{display:block;width:100%;height:auto;max-height:280px}.evolution-chart circle:hover{r:6;fill:#c69eff}@media(max-width:700px){.evolution-chart{min-height:130px}.evolution-chart svg{min-height:145px}.metric-text{font-size:clamp(15px,4vw,21px)}}
+
+/* Gráficos de barras da aba Investimentos */
+.invest-bar-chart{width:100%;display:block;height:auto;max-height:280px;margin-top:18px}.invest-bar-chart .bar-current{fill:var(--accent)}.invest-bar-chart .bar-other{fill:#485675}.invest-bar-chart text{fill:var(--muted);font-size:11px}.invest-bar-chart .grid-line{stroke:var(--line);stroke-dasharray:3 5}
+@media(max-width:700px){.invest-bar-chart{min-height:150px}.filter-controls:has(#categoria),.filter-controls:has(#credito-categoria){grid-template-columns:repeat(2,minmax(0,1fr))}.filter-controls label:has(#categoria),.filter-controls label:has(#credito-categoria){grid-column:1/-1}}
