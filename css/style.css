@@ -65,3 +65,6 @@
 .login-card .login-error{color:#ff96a4;margin:4px 0;min-height:18px;font-size:12px}.login-card>small{color:#8895aa;display:block;text-align:center;margin-top:20px}
 .account{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.user-email{color:#9ba8bd;font-size:12px;overflow-wrap:anywhere}.logout-button{background:#1b2636;border:1px solid #354157;color:#e5ebf5;padding:9px 13px;border-radius:9px;cursor:pointer}
 @media(max-width:600px){.login-card{padding:28px 22px}.login-card h1{font-size:24px}.account{justify-content:flex-end}.user-email{display:none}}
+
+/* Aba Crédito: usa as mesmas cores, ícones, cards e tabelas do Resumo */
+.metric-text{font-size:clamp(17px,1.65vw,25px);overflow-wrap:anywhere}.evolution-chart{width:100%;margin-top:20px;min-height:200px}.evolution-chart svg{display:block;width:100%;height:auto;max-height:280px}.evolution-chart circle:hover{r:6;fill:#c69eff}@media(max-width:700px){.evolution-chart{min-height:130px}.evolution-chart svg{min-height:145px}.metric-text{font-size:clamp(15px,4vw,21px)}}

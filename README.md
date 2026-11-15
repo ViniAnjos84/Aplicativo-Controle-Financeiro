@@ -12,3 +12,9 @@ A URL e a chave publicável podem estar no frontend: a proteção dos dados depe
 Login e logout, sessão persistente, resumo, filtros por ano e mês, gráfico de categorias e tabela responsiva. Abas Crédito e Investimentos ainda não foram implementadas.
 
 Investimentos contabiliza somente saídas da categoria `investimentos`, podendo se sobrepor às outras saídas. Crédito reconhece `credito` e `crédito`.
+
+
+## Aba Crédito
+A nova aba Crédito usa somente as movimentações do Supabase com `tipo_movimentacao = saida` e `forma_pagamento = credito` (acentos e maiúsculas são normalizados). Contém filtros de mês/ano, cards de total, categoria mais gasta, ticket médio e quantidade, evolução diária/mensal, categorias e histórico. Não calcula faturas nem limites. Os pagamentos de fatura devem ser registrados separadamente como saídas da conta; evite interpretá-los como novas compras.
+
+**Atualização de versão:** se você já configurou sua chave publishable em `js/config.js`, mantenha esse arquivo ao copiar a nova versão. Nunca use a chave secret/service_role no frontend.
