@@ -1,0 +1,17 @@
+/* Estilos e identidade visual serão definidos na etapa de interface. */
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100vh;
+}
