@@ -4,7 +4,7 @@ async function buscarMovimentacoes(cliente) {
   const registros = [];
   const tamanho = 1000;
   for (let inicio = 0; ; inicio += tamanho) {
-    const {data, error} = await cliente.from('movimentacoes')
+    const {data, error} = await cliente.from('movimentacoes_academicas')
       .select('id,tipo_movimentacao,descricao,valor,categoria,forma_pagamento,data')
       .order('data', {ascending:false}).order('id', {ascending:false})
       .range(inicio, inicio + tamanho - 1);
