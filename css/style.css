@@ -130,3 +130,10 @@
 .filter-controls[hidden]{display:none!important}
 .filter-date-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-column:1/-1;gap:12px}
 @media(max-width:700px){.filters-header{flex-wrap:nowrap!important}.filters-title small{font-size:11px}.filter-toggle{flex-shrink:0}.filter-controls:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}.filter-date-row{gap:8px}}
+
+/* v7: pendências e gráfico de pagamentos */
+.warning-filter{display:grid;place-items:center;border:1px solid #4b5365;border-radius:8px;background:#202939;color:#ffca6b;min-width:38px;min-height:38px;font-size:18px;cursor:pointer}
+.warning-filter[aria-pressed="true"]{background:#57401e;border-color:#ffc15a;box-shadow:0 0 0 2px #ffc15a33}
+.missing-warning{display:inline-block;margin-left:6px;font-size:14px;vertical-align:middle;cursor:help}
+.history-actions{display:flex;flex-direction:row;align-items:center;gap:7px}
+@media(max-width:700px){.history-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:7px}.history-actions .add-entry{margin-left:0}.history-actions .count{order:-1}.warning-filter,.add-entry{flex-shrink:0}}
