@@ -72,3 +72,29 @@
 /* Gráficos de barras da aba Investimentos */
 .invest-bar-chart{width:100%;display:block;height:auto;max-height:280px;margin-top:18px}.invest-bar-chart .bar-current{fill:var(--accent)}.invest-bar-chart .bar-other{fill:#485675}.invest-bar-chart text{fill:var(--muted);font-size:11px}.invest-bar-chart .grid-line{stroke:var(--line);stroke-dasharray:3 5}
 @media(max-width:700px){.invest-bar-chart{min-height:150px}.filter-controls:has(#categoria),.filter-controls:has(#credito-categoria){grid-template-columns:repeat(2,minmax(0,1fr))}.filter-controls label:has(#categoria),.filter-controls label:has(#credito-categoria){grid-column:1/-1}}
+
+/* Filtros por intervalo e ações de histórico */
+.filters{align-items:stretch;flex-direction:column;gap:18px}
+.filter-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%}
+.filter-controls label{min-width:0;font-size:12px}
+.filter-controls select,.filter-controls input[type=date]{width:100%;min-width:0;min-height:44px;border:1px solid #354052;border-radius:8px;background:#101721;color:#f4f5fb;padding:10px 12px;font:inherit;outline:none;color-scheme:dark}
+.filter-controls :is(select,input):focus{border-color:#888dff}
+.history-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.add-entry{border:1px solid #666cef;background:#262b51;color:#d7d9ff;border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:650}
+.row-actions{display:flex;justify-content:flex-end;gap:6px}
+.icon-action{border:1px solid #354052;background:#1c2636;color:#e0e5ee;border-radius:7px;padding:6px 9px;cursor:pointer;font-size:13px}
+.icon-action.delete{color:#ff94a0}
+.entry-dialog{background:#151c28;color:#f3f5f9;border:1px solid #354052;border-radius:15px;width:min(440px,calc(100vw - 28px));padding:24px;max-height:90vh;overflow:auto}
+.entry-dialog::backdrop{background:#000a}
+.entry-dialog form{display:grid;gap:12px}
+.entry-dialog label{display:grid;gap:5px;color:#aeb9c9;font-size:12px}
+.entry-dialog :is(input,select){background:#101721;border:1px solid #354052;border-radius:8px;color:#fff;padding:11px;width:100%;font:inherit;color-scheme:dark}
+.modal-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal-heading h2{margin:0;font-size:19px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.modal-actions button{border:1px solid #354052;border-radius:8px;background:#263044;color:white;padding:10px 16px;cursor:pointer}
+.modal-actions button:last-child{background:#7278ee;border-color:#7278ee;color:#101620;font-weight:700}
+.modal-actions .danger-button:last-child{background:#a9364c;border-color:#a9364c;color:white}
+#entry-error,#delete-error{color:#ff94a0;margin:0;font-size:12px}
+@media(max-width:900px){.filter-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.filters{padding:18px}.filter-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.filter-controls label:has([id$="-categoria"]),.filter-controls label:has(#categoria){grid-column:1/-1}.history-actions{justify-content:flex-start}.table-scroll td[data-label="Ações"]{display:flex;justify-content:flex-end}.row-actions{width:100%}.entry-dialog{padding:18px}}
