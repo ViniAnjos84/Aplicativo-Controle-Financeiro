@@ -137,3 +137,12 @@
 .missing-warning{display:inline-block;margin-left:6px;font-size:14px;vertical-align:middle;cursor:help}
 .history-actions{display:flex;flex-direction:row;align-items:center;gap:7px}
 @media(max-width:700px){.history-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:7px}.history-actions .add-entry{margin-left:0}.history-actions .count{order:-1}.warning-filter,.add-entry{flex-shrink:0}}
+
+/* v9: barras duplas de fluxo mensal */
+.fluxo-legenda{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;color:#b5bfcd;font-size:12px}
+.fluxo-legenda span{display:inline-flex;align-items:center;gap:7px}
+.fluxo-cor{display:inline-block;width:11px;height:11px;border-radius:3px}
+.fluxo-cor.entrada{background:#45d6a1}.fluxo-cor.saida{background:#ff7384}
+.fluxo-grafico{margin-top:8px;min-height:0}
+.fluxo-nota{font-size:12px;line-height:1.5;margin-top:8px;color:#a9b4c4}
+@media(max-width:700px){.fluxo-legenda{gap:8px 15px;font-size:11px}.fluxo-grafico svg{min-height:160px}.fluxo-nota{font-size:11px}}
