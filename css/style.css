@@ -154,3 +154,16 @@
 .filter-actions .filter-toggle[aria-expanded="true"]{background:#30355c;border-color:#8489ff;color:#c6c9ff}
 .filter-actions svg{display:block}
 @media(max-width:700px){.filter-actions{gap:6px}.filter-actions .filter-toggle,.filter-actions .filter-clear{width:36px;height:36px;min-width:36px}}
+
+/* v11: seletores múltiplos responsivos */
+.filter-controls label:has(>select[multiple]){display:block}
+.multi-filter{position:relative;width:100%;min-width:145px;font-size:13px}
+.multi-filter summary{list-style:none;cursor:pointer;background:#101721;color:#f4f5fb;border:1px solid #354052;border-radius:8px;padding:10px 30px 10px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.multi-filter summary::-webkit-details-marker{display:none}
+.multi-filter summary:after{content:"⌄";position:absolute;right:10px;top:8px;color:#9ba8bd}
+.multi-filter[open] summary{border-color:#888dff}
+.multi-options{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:100%;width:max-content;max-width:min(300px,85vw);max-height:240px;overflow-y:auto;background:#182231;border:1px solid #354052;border-radius:9px;box-shadow:0 12px 30px #0008;padding:6px}
+.multi-options label{display:flex!important;align-items:center;gap:9px;padding:8px 9px;color:#d7dfeb;font-size:12px;cursor:pointer;white-space:normal}
+.multi-options label:hover{background:#27354b;border-radius:5px}
+.multi-options input{accent-color:#8489ff;width:16px;height:16px;flex-shrink:0}
+@media(max-width:700px){.multi-filter{min-width:0}.multi-options{max-width:min(260px,82vw)}}
