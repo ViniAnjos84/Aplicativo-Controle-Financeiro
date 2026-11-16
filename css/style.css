@@ -146,3 +146,11 @@
 .fluxo-grafico{margin-top:8px;min-height:0}
 .fluxo-nota{font-size:12px;line-height:1.5;margin-top:8px;color:#a9b4c4}
 @media(max-width:700px){.fluxo-legenda{gap:8px 15px;font-size:11px}.fluxo-grafico svg{min-height:160px}.fluxo-nota{font-size:11px}}
+
+/* v10: ações compactas de filtros */
+.filter-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.filter-actions .filter-toggle,.filter-actions .filter-clear{display:grid;place-items:center;width:40px;height:40px;min-width:40px;padding:0;margin:0;border:1px solid #354052;border-radius:10px;background:#202939;color:#c7d0e0;cursor:pointer;transition:background .15s,border-color .15s}
+.filter-actions .filter-toggle:hover,.filter-actions .filter-clear:hover{background:#2b3550;border-color:#8489ff}
+.filter-actions .filter-toggle[aria-expanded="true"]{background:#30355c;border-color:#8489ff;color:#c6c9ff}
+.filter-actions svg{display:block}
+@media(max-width:700px){.filter-actions{gap:6px}.filter-actions .filter-toggle,.filter-actions .filter-clear{width:36px;height:36px;min-width:36px}}
