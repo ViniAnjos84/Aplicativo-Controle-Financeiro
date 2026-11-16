@@ -167,3 +167,9 @@
 .multi-options label:hover{background:#27354b;border-radius:5px}
 .multi-options input{accent-color:#8489ff;width:16px;height:16px;flex-shrink:0}
 @media(max-width:700px){.multi-filter{min-width:0}.multi-options{max-width:min(260px,82vw)}}
+
+/* Identificação visual exclusiva da branch acadêmica */
+.brand{flex-wrap:wrap}
+.academic-badge{display:block;flex-basis:100%;width:max-content;margin:0 0 0 1px;padding:5px 10px;border:1px solid #6065a8;border-radius:7px;background:#262b51;color:#d4d7ff;font-size:11px;font-weight:700;letter-spacing:0}
+.academic-login-label{display:inline-block;margin:5px 0 14px;padding:6px 10px;border:1px solid #6065a8;border-radius:7px;background:#262b51;color:#d4d7ff;font-size:11px;font-weight:700}
+@media(max-width:700px){.academic-badge{display:none}}
