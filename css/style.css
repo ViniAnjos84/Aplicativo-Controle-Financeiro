@@ -119,3 +119,14 @@
  .history-actions{display:flex;flex-direction:column-reverse;align-items:flex-end;justify-content:flex-start;gap:7px;margin-left:auto}
  .history-actions .add-entry{margin-left:auto}
 }
+
+/* v6: cabeçalho correto e filtros sempre abaixo */
+.filters{display:block!important}
+.filters-header{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;width:100%;gap:12px}
+.filters-title{display:flex!important;flex:1;min-width:0;align-items:center}
+.filters-title>div{min-width:0}
+.filter-toggle{margin-left:auto;white-space:nowrap}
+.filter-controls:not([hidden]){display:grid!important;width:100%;clear:both;margin-top:18px}
+.filter-controls[hidden]{display:none!important}
+.filter-date-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-column:1/-1;gap:12px}
+@media(max-width:700px){.filters-header{flex-wrap:nowrap!important}.filters-title small{font-size:11px}.filter-toggle{flex-shrink:0}.filter-controls:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}.filter-date-row{gap:8px}}
