@@ -6,12 +6,12 @@ let dados=[], cliente=null;
 function mostrarLogin(){loginScreen.hidden=false;dashboard.hidden=true;document.getElementById('login-password').value=''}
 function mostrarPainel(){loginScreen.hidden=true;dashboard.hidden=false}
 function configurarAnos(){const anos=[...new Set([...dados.map(m=>Number(m.data.slice(0,4))),new Date().getFullYear()])].sort((a,b)=>b-a);anoEl.innerHTML=anos.map(a=>`<option value="${a}">${a}</option>`).join('');anoEl.value=String(new Date().getFullYear());iniciarDatas('');configurarCredito(dados);configurarInvestimentos(dados);configurarCategorias();configurarFiltrosExtras()}
-function configurarCategorias(){const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));for(const id of ['categoria','credito-categoria']){const el=document.getElementById(id),anterior=el.value;el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([chave,nome])=>`<option value="${escapar(chave)}">${escapar(nome)}</option>`).join('');el.value=categorias.some(([chave])=>chave===anterior)?anterior:'todas'}}
-function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value).filter(m=>(categoriaEl.value==='todas'||normalizar(m.categoria||'Sem categoria')===categoriaEl.value)&&filtrarExtras(m,'')),resumo=calcularResumo(filtrados);
+function configurarCategorias(){const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));for(const id of ['categoria','credito-categoria']){const el=document.getElementById(id),anterior=el.value;el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([chave,nome])=>`<option value="${escapar(chave)}">${escapar(nome)}</option>`).join('');el.value=categorias.some(([chave])=>chave===anterior)?anterior:'todas';montarMultiFiltro(id)}}
+function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value).filter(m=>(opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria')))&&filtrarExtras(m,'')),resumo=calcularResumo(filtrados);
  for(const chave of ['entradas','saidas','credito','investimentos'])document.getElementById(chave).textContent=moeda(resumo[chave]);
  const historico=filtrarPendentes(filtrados,'');document.getElementById('contagem').textContent=`${historico.length} ${historico.length===1?'registro':'registros'}`;
  document.getElementById('movimentacoes').innerHTML=historico.length?historico.map(m=>{const tipo=normalizar(m.tipo_movimentacao)==='entrada'?'entrada':'saida';return `<tr><td data-label="Descrição">${escapar(m.descricao||"Sem descrição")} ${avisoRegistro(m)}</td><td data-label="Categoria">${escapar(m.categoria)}</td><td data-label="Pagamento">${escapar(m.forma_pagamento||'—')}</td><td data-label="Data">${dataBR(m.data)}</td><td data-label="Tipo"><span class="type ${tipo}">${tipo==='entrada'?'Entrada':'Saída'}</span></td><td data-label="Valor" class="right"><span class="money ${tipo}">${tipo==='entrada'?'+':'−'} ${moeda(m.valor)}</span></td><td data-label="Ações">${acoesRegistro(m)}</td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Nenhuma movimentação encontrada para o período selecionado.</td></tr>';
- renderizarGrafico(filtrados);renderizarFluxoMensal(dados,anoEl.value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
+ renderizarGrafico(filtrados);renderizarFluxoMensal(dados.filter(m=>opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria'))&&filtrarExtras(m,'')),anoEl.value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
 async function carregarPainel(usuario){document.getElementById('user-email').textContent=usuario.email||'';document.getElementById('credit-user-email').textContent=usuario.email||'';document.getElementById('invest-user-email').textContent=usuario.email||'';dados=await buscarMovimentacoes(cliente);configurarAnos();atualizar();mostrarPainel()}
 async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE_AQUI_SUA_CHAVE_PUBLICAVEL'){aviso.textContent='Configure a chave publicável em js/config.js.';return}
  cliente=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
@@ -44,9 +44,9 @@ async function recarregar(){dados=await buscarMovimentacoes(cliente);configurarC
 formEntry.addEventListener('submit',async e=>{e.preventDefault();const save=document.getElementById('entry-save');save.disabled=true;document.getElementById('entry-error').textContent='';try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada. Entre novamente.');const payload={};for(const k of ['tipo_movimentacao','descricao','valor','categoria','forma_pagamento','data'])payload[k]=formEntry.elements[k].value.trim();payload.valor=Number(payload.valor);if(!Number.isFinite(payload.valor)||payload.valor<0)throw new Error('Valor inválido.');let query;if(editingId){query=cliente.from('movimentacoes').update(payload).eq('id',editingId).eq('user_id',user.id).select('id')}else{query=cliente.from('movimentacoes').insert({...payload,user_id:user.id}).select('id')}const {data:salvos,error}=await query;if(error)throw error;if(!salvos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();modal.close()}catch(err){document.getElementById('entry-error').textContent=err.message}finally{save.disabled=false}});
 document.getElementById('delete-confirm').onclick=async()=>{const b=document.getElementById('delete-confirm');b.disabled=true;try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada.');const {data:removidos,error}=await cliente.from('movimentacoes').delete().eq('id',deletingId).eq('user_id',user.id).select('id');if(error)throw error;if(!removidos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();document.getElementById('delete-dialog').close()}catch(e){document.getElementById('delete-error').textContent=e.message}finally{b.disabled=false}};
 
-function configurarFiltrosExtras(){for(const prefix of ['','credito-','invest-']){const el=document.getElementById(prefix+'pagamento'),anterior=el.value;const valores=new Map();for(const m of dados){const valor=(m.forma_pagamento||'').trim();if(valor&&!valores.has(normalizar(valor)))valores.set(normalizar(valor),valor)}const opcoes=[...valores.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));el.innerHTML='<option value="todos">Todas as formas</option>'+opcoes.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');el.value=opcoes.some(([k])=>k===anterior)?anterior:'todos'}}
-function filtrarExtras(m,prefix){const tipo=document.getElementById(prefix+'tipo').value,pagamento=document.getElementById(prefix+'pagamento').value;return (tipo==='todos'||normalizar(m.tipo_movimentacao)===tipo)&&(pagamento==='todos'||normalizar(m.forma_pagamento)===pagamento)}
-for(const prefix of ['','credito-','invest-']){const controls=document.getElementById(prefix+'filter-controls'),botao=document.querySelector('[aria-controls="'+controls.id+'"]');botao.addEventListener('click',()=>{const aberto=botao.getAttribute('aria-expanded')==='true';botao.setAttribute('aria-expanded',String(!aberto));botao.setAttribute('aria-label',aberto?'Mostrar filtros':'Ocultar filtros');botao.title=aberto?'Mostrar filtros':'Ocultar filtros';controls.hidden=aberto});for(const campo of ['tipo','pagamento'])document.getElementById(prefix+campo).addEventListener('change',()=>{if(prefix==='credito-')atualizarCredito(dados);else if(prefix==='invest-')atualizarInvestimentos(dados);else atualizar()})}
+function configurarFiltrosExtras(){for(const prefix of ['','credito-','invest-']){const el=document.getElementById(prefix+'pagamento'),anterior=el.value;const valores=new Map();for(const m of dados){const valor=(m.forma_pagamento||'').trim();if(valor&&!valores.has(normalizar(valor)))valores.set(normalizar(valor),valor)}const opcoes=[...valores.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));el.innerHTML='<option value="todos">Todas as formas</option>'+opcoes.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');el.value=opcoes.some(([k])=>k===anterior)?anterior:'todos';montarMultiFiltro(prefix+'pagamento')}}
+function filtrarExtras(m,prefix){return opcaoSelecionada(prefix+'tipo',normalizar(m.tipo_movimentacao))&&opcaoSelecionada(prefix+'pagamento',normalizar(m.forma_pagamento))}
+for(const prefix of ['','credito-','invest-']){const controls=document.getElementById(prefix+'filter-controls'),botao=document.querySelector('[aria-controls="'+controls.id+'"]');botao.addEventListener('click',()=>{const aberto=botao.getAttribute('aria-expanded')==='true';botao.setAttribute('aria-expanded',String(!aberto));botao.setAttribute('aria-label',aberto?'Mostrar filtros':'Ocultar filtros');botao.title=aberto?'Mostrar filtros':'Ocultar filtros';controls.hidden=aberto});for(const campo of ['tipo','pagamento'])montarMultiFiltro(prefix+campo)}
 
 function configurarPagamentosFormulario(atual=''){const el=formEntry.elements.forma_pagamento,valores=new Map();for(const m of dados){const v=(m.forma_pagamento||'').trim();if(v&&!valores.has(normalizar(v)))valores.set(normalizar(v),v)}if(atual&&!valores.has(normalizar(atual)))valores.set(normalizar(atual),atual);const opcoes=[...valores.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'));el.innerHTML='<option value="">Selecione a forma de pagamento</option>'+opcoes.map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');el.value=atual}
 
@@ -59,9 +59,31 @@ for(const prefix of ['','credito-','invest-']){
  limpar.addEventListener('click',()=>{
   document.getElementById(prefix+'ano').value=String(new Date().getFullYear());
   iniciarDatas(prefix);
-  for(const campo of ['categoria','tipo','pagamento']){const el=document.getElementById(prefix+campo);if(el)el.value=campo==='categoria'?'todas':'todos'}
+  for(const campo of ['categoria','tipo','pagamento']){const el=document.getElementById(prefix+campo);if(el){Array.from(el.options).forEach(o=>o.selected=false);montarMultiFiltro(prefix+campo)}}
   if(prefix==='credito-')atualizarCredito(dados);
   else if(prefix==='invest-')atualizarInvestimentos(dados);
   else atualizar();
  });
 }
+
+function valoresSelecionados(id){const el=document.getElementById(id);return el?[...el.selectedOptions].map(o=>o.value).filter(v=>v!=='todos'&&v!=='todas'):[]}
+function opcaoSelecionada(id,valor){const selecionados=valoresSelecionados(id);return !selecionados.length||selecionados.includes(valor)}
+function montarMultiFiltro(id){
+ const el=document.getElementById(id),caixa=document.querySelector('[data-multi="'+id+'"]');if(!el||!caixa)return;
+ const atuais=valoresSelecionados(id),opcoes=[...el.options].filter(o=>o.value!=='todos'&&o.value!=='todas');
+ for(const o of el.options)o.selected=atuais.includes(o.value);
+ caixa.querySelector('.multi-options').innerHTML=opcoes.map(o=>'<label><input type="checkbox" value="'+escapar(o.value)+'" '+(atuais.includes(o.value)?'checked':'')+'><span>'+escapar(o.textContent)+'</span></label>').join('');
+ caixa.querySelector('summary').textContent=atuais.length?atuais.length===1?(opcoes.find(o=>o.value===atuais[0])?.textContent||'1 selecionado'):atuais.length+' selecionados':'Todas as opções';
+}
+for(const caixa of document.querySelectorAll('[data-multi]')){
+ caixa.addEventListener('change',e=>{
+  if(!e.target.matches('input[type="checkbox"]'))return;
+  const id=caixa.dataset.multi,el=document.getElementById(id),valores=[...caixa.querySelectorAll('input:checked')].map(i=>i.value);
+  for(const o of el.options)o.selected=valores.includes(o.value);
+  montarMultiFiltro(id);
+  if(id.startsWith('credito-'))atualizarCredito(dados);
+  else if(id.startsWith('invest-'))atualizarInvestimentos(dados);
+  else atualizar();
+ });
+}
+document.addEventListener('click',e=>{for(const caixa of document.querySelectorAll('[data-multi][open]'))if(!caixa.contains(e.target))caixa.open=false});
