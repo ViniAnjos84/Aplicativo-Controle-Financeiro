@@ -196,3 +196,6 @@
 .mfa-secret{display:block;overflow-wrap:anywhere;text-align:center;padding:11px;background:#101721;border:1px solid #354052;border-radius:8px;color:#e3e5ff;font-size:12px;user-select:all}
 #mfa-code{text-align:center;letter-spacing:.32em;font-size:20px;font-variant-numeric:tabular-nums}
 .mfa-cancel{display:block;margin:14px auto 0;background:transparent;border:0;color:#b9c4d5;cursor:pointer;text-decoration:underline;font:inherit;font-size:13px}
+
+/* A regra display:grid de .login-screen não pode sobrescrever o atributo hidden. */
+.login-screen[hidden]{display:none!important}
