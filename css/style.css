@@ -187,3 +187,12 @@
 .payment-help a{color:#aeb4ff}
 #pagamento-feedback{min-height:18px;font-size:12px}
 @media(max-width:600px){.payment-create-row{flex-direction:column}.payment-list li{align-items:flex-start;flex-wrap:wrap}.payment-actions{margin-left:auto}}
+
+/* Telas de cadastro e validação obrigatória do Google Authenticator */
+#mfa-screen[hidden]{display:none!important}
+.mfa-card{max-width:440px}
+.mfa-qr{display:block;width:190px;height:190px;max-width:100%;margin:18px auto 12px;background:white;padding:9px;border-radius:12px}
+.mfa-hint{font-size:12px;line-height:1.5;color:#aab6c8;text-align:center;margin:10px 0}
+.mfa-secret{display:block;overflow-wrap:anywhere;text-align:center;padding:11px;background:#101721;border:1px solid #354052;border-radius:8px;color:#e3e5ff;font-size:12px;user-select:all}
+#mfa-code{text-align:center;letter-spacing:.32em;font-size:20px;font-variant-numeric:tabular-nums}
+.mfa-cancel{display:block;margin:14px auto 0;background:transparent;border:0;color:#b9c4d5;cursor:pointer;text-decoration:underline;font:inherit;font-size:13px}
