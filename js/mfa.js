@@ -35,7 +35,17 @@ async function exigirMfa(usuario){
     exibirMfa('challenge');
     return;
   }
-  // Sem fator verificado, o usuário precisa cadastrar um antes de usar o painel.
+  // Um cadastro interrompido deixa um fator não verificado no Supabase.
+  // Não é possível recuperar o segredo/QR Code anterior: descartamos apenas
+  // fatores TOTP pendentes antes de gerar um novo.
+  const pendentes=(fatores.all||fatores.totp||[]).filter(f=>
+    (f.factor_type==='totp'||f.factorType==='totp'||fatores.totp?.some(t=>t.id===f.id)) &&
+    f.status==='unverified'
+  );
+  for(const fator of pendentes){
+    const {error:erroRemocao}=await cliente.auth.mfa.unenroll({factorId:fator.id});
+    if(erroRemocao)throw new Error('Não foi possível reiniciar o cadastro do autenticador: '+erroRemocao.message);
+  }
   const {data:novo,error:erroCadastro}=await cliente.auth.mfa.enroll({
     factorType:'totp',friendlyName:'Google Authenticator'
   });
