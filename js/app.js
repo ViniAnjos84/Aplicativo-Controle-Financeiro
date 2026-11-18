@@ -37,7 +37,7 @@ async function prepararRecuperacao(){
 document.getElementById('reset-mfa-form').addEventListener('submit',async e=>{
  e.preventDefault();if(!cliente||!recuperandoSenha||!resetMfaFator)return;
  const codigo=document.getElementById('reset-mfa-code').value.trim(),msg=document.getElementById('reset-mfa-message'),botao=document.getElementById('reset-mfa-submit');
- if(!/^\\d{6}$/.test(codigo)){msg.textContent='Digite os 6 números do autenticador.';return}
+ if(!/^\d{6}$/.test(codigo)){msg.textContent='Digite os 6 números do autenticador.';return}
  botao.disabled=true;msg.textContent='';
  try{
   const {error}=await cliente.auth.mfa.challengeAndVerify({factorId:resetMfaFator,code:codigo});
@@ -99,7 +99,7 @@ document.getElementById('reset-form').addEventListener('submit',async e=>{
 async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE_AQUI_SUA_CHAVE_PUBLICAVEL'){aviso.textContent='Configure a chave publicável em js/config.js.';return}
  cliente=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
  cliente.auth.onAuthStateChange((evento)=>{
-  if(evento==='PASSWORD_RECOVERY'){void prepararRecuperacao()}
+  if(evento==='PASSWORD_RECOVERY'){queueMicrotask(()=>{void prepararRecuperacao()})}
   if(evento==='SIGNED_OUT'&&!recuperandoSenha){ocultarMfa();mostrarLogin()}
  });
  const {data:{session},error}=await cliente.auth.getSession();
