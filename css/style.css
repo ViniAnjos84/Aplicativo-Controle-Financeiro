@@ -199,3 +199,13 @@
 
 /* A regra display:grid de .login-screen não pode sobrescrever o atributo hidden. */
 .login-screen[hidden]{display:none!important}
+
+/* Recuperação de senha e alternância persistente da visibilidade */
+.login-card .password-field{position:relative}
+.login-card .password-field input{padding-right:54px}
+.login-card .password-field .password-eye{position:absolute;right:6px;top:5px;width:39px;height:39px;display:grid;place-items:center;padding:0;background:transparent;color:#aebbd0;border:0;border-radius:8px}
+.login-card .password-field .password-eye:hover,.login-card .password-field .password-eye:focus-visible{color:#fff;background:#26334a}
+.login-card .forgot-password,.login-card .auth-back{background:transparent;color:#aeb4ff;padding:7px 2px;border:0;text-align:center;font-size:13px;font-weight:600}
+.login-card .forgot-password:hover,.login-card .auth-back:hover{text-decoration:underline}
+.login-card .auth-back{display:block;margin:15px auto 0}
+.login-card #recover-message.success,.login-card #reset-message.success{color:#65dfb2}
