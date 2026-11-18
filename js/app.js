@@ -17,6 +17,39 @@ async function carregarPainel(usuario){document.getElementById('user-email').tex
 let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
 const recoverScreen=document.getElementById('recover-screen'),resetScreen=document.getElementById('reset-screen');
 function exibirTelaAuth(tela){loginScreen.hidden=true;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;recoverScreen.hidden=tela!=='recover';resetScreen.hidden=tela!=='reset'}
+let resetMfaVerificado=false,resetMfaFator=null;
+async function prepararRecuperacao(){
+ recuperandoSenha=true;exibirTelaAuth('reset');
+ const formMfa=document.getElementById('reset-mfa-form'),formSenha=document.getElementById('reset-form');
+ const msg=document.getElementById('reset-mfa-message');
+ msg.textContent='';formSenha.hidden=true;formMfa.hidden=true;resetMfaVerificado=false;resetMfaFator=null;
+ try{
+  const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(erroNivel)throw erroNivel;
+  if(nivel.currentLevel==='aal2'){resetMfaVerificado=true;formSenha.hidden=false;return}
+  const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
+  if(erroFatores)throw erroFatores;
+  const fator=fatores.totp?.find(f=>f.status==='verified');
+  if(!fator)throw new Error('Nenhum autenticador verificado encontrado. Contate o administrador para recuperar o acesso.');
+  resetMfaFator=fator.id;formMfa.hidden=false;document.getElementById('reset-mfa-code').focus();
+ }catch(err){msg.textContent=err.message||'Não foi possível preparar a recuperação.';formMfa.hidden=false;document.getElementById('reset-mfa-submit').disabled=true}
+}
+document.getElementById('reset-mfa-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(!cliente||!recuperandoSenha||!resetMfaFator)return;
+ const codigo=document.getElementById('reset-mfa-code').value.trim(),msg=document.getElementById('reset-mfa-message'),botao=document.getElementById('reset-mfa-submit');
+ if(!/^\\d{6}$/.test(codigo)){msg.textContent='Digite os 6 números do autenticador.';return}
+ botao.disabled=true;msg.textContent='';
+ try{
+  const {error}=await cliente.auth.mfa.challengeAndVerify({factorId:resetMfaFator,code:codigo});
+  if(error)throw error;
+  const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(erroNivel)throw erroNivel;
+  if(nivel.currentLevel!=='aal2')throw new Error('Não foi possível confirmar a sessão MFA.');
+  resetMfaVerificado=true;document.getElementById('reset-mfa-form').hidden=true;document.getElementById('reset-form').hidden=false;
+  document.getElementById('reset-password').focus();
+ }catch(err){msg.textContent=err.message||'Código inválido.'}
+ finally{botao.disabled=false}
+});
 function limparUrlRecuperacao(){history.replaceState(null,'',location.pathname+location.search.replace(/([?&])type=recovery(&|$)/,'$1').replace(/[?&]$/,''))}
 document.getElementById('toggle-login-password').addEventListener('click',()=>{
  const campo=document.getElementById('login-password'),botao=document.getElementById('toggle-login-password');
@@ -31,7 +64,7 @@ document.getElementById('forgot-password').addEventListener('click',()=>{
 document.getElementById('recover-back').addEventListener('click',mostrarLogin);
 document.getElementById('reset-back').addEventListener('click',async()=>{
  if(cliente)await cliente.auth.signOut();
- recuperandoSenha=false;limparUrlRecuperacao();mostrarLogin();
+ recuperandoSenha=false;resetMfaVerificado=false;limparUrlRecuperacao();mostrarLogin();
 });
 document.getElementById('recover-form').addEventListener('submit',async e=>{
  e.preventDefault();if(!cliente)return;
@@ -47,7 +80,7 @@ document.getElementById('recover-form').addEventListener('submit',async e=>{
  finally{botao.disabled=false}
 });
 document.getElementById('reset-form').addEventListener('submit',async e=>{
- e.preventDefault();if(!cliente||!recuperandoSenha)return;
+ e.preventDefault();if(!cliente||!recuperandoSenha||!resetMfaVerificado)return;
  const senha=document.getElementById('reset-password').value,confirmacao=document.getElementById('reset-confirm').value;
  const msg=document.getElementById('reset-message'),botao=document.getElementById('reset-submit');
  msg.textContent='';msg.classList.remove('success');
@@ -66,12 +99,12 @@ document.getElementById('reset-form').addEventListener('submit',async e=>{
 async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE_AQUI_SUA_CHAVE_PUBLICAVEL'){aviso.textContent='Configure a chave publicável em js/config.js.';return}
  cliente=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
  cliente.auth.onAuthStateChange((evento)=>{
-  if(evento==='PASSWORD_RECOVERY'){recuperandoSenha=true;exibirTelaAuth('reset')}
+  if(evento==='PASSWORD_RECOVERY'){void prepararRecuperacao()}
   if(evento==='SIGNED_OUT'&&!recuperandoSenha){ocultarMfa();mostrarLogin()}
  });
  const {data:{session},error}=await cliente.auth.getSession();
  if(error){aviso.textContent=error.message;return}
- if(recuperandoSenha){exibirTelaAuth('reset');return}
+ if(recuperandoSenha){await prepararRecuperacao();return}
  if(session?.user){try{await exigirMfa(session.user)}catch(e){aviso.textContent='Não foi possível verificar a autenticação: '+e.message;mostrarLogin()}}
 }
 form.addEventListener('submit',async e=>{e.preventDefault();if(!cliente)return;aviso.textContent='';const botao=document.getElementById('login-button');botao.disabled=true;botao.textContent='Entrando...';try{const {data,error}=await cliente.auth.signInWithPassword({email:document.getElementById('login-email').value.trim(),password:document.getElementById('login-password').value});if(error)throw error;await exigirMfa(data.user)}catch(e){aviso.textContent=e.message==='Invalid login credentials'?'E-mail ou senha incorretos.':e.message}finally{botao.disabled=false;botao.textContent='Entrar'}});
