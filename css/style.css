@@ -173,3 +173,23 @@
 .academic-badge{display:block;flex-basis:100%;width:max-content;margin:0 0 0 1px;padding:5px 10px;border:1px solid #6065a8;border-radius:7px;background:#262b51;color:#d4d7ff;font-size:11px;font-weight:700;letter-spacing:0}
 .academic-login-label{display:inline-block;margin:5px 0 14px;padding:6px 10px;border:1px solid #6065a8;border-radius:7px;background:#262b51;color:#d4d7ff;font-size:11px;font-weight:700}
 @media(max-width:700px){.academic-badge{display:none}}
+
+
+/* Configurações de formas de pagamento */
+.settings-panel{max-width:780px}
+.payment-create{display:grid;gap:10px;margin:18px 0}
+.payment-create>label{font-weight:600;color:var(--text)}
+.payment-create-row{display:flex;gap:10px}
+.payment-create-row input{flex:1;min-width:0;background:#101721;border:1px solid #354052;border-radius:8px;padding:12px;color:var(--text);font:inherit}
+.payment-create-row button,.payment-actions button{border:1px solid #6065a8;border-radius:8px;background:#262b51;color:#e3e5ff;padding:10px 14px;cursor:pointer}
+.payment-create-row button:disabled{opacity:.6;cursor:wait}
+.payment-list{padding:0;margin:15px 0 0;list-style:none;display:grid;gap:8px}
+.payment-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;background:#101721;border:1px solid #273140;border-radius:9px}
+.payment-list small{color:#8d9aaa}
+.payment-actions{display:flex;gap:7px}
+.payment-actions button{font-size:12px;padding:7px 10px}
+.payment-actions button:last-child{border-color:#784454;background:#3a222e;color:#ffc1cb}
+.payment-help{margin:-7px 0 13px;color:#9daabd;font-size:12px;line-height:1.5}
+.payment-help a{color:#aeb4ff}
+#pagamento-feedback{min-height:18px;font-size:12px}
+@media(max-width:600px){.payment-create-row{flex-direction:column}.payment-list li{align-items:flex-start;flex-wrap:wrap}.payment-actions{margin-left:auto}}
