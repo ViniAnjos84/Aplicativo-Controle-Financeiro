@@ -109,7 +109,13 @@ async function atualizarBackupMfa(){
   const descricao=document.createElement('small');descricao.textContent=i===0?'Autenticador cadastrado':'Dispositivo adicional';
   info.append(nome,descricao);
   const tag=document.createElement('span');tag.className='security-factor-tag';tag.textContent='Ativo';
-  item.append(icone,info,tag);lista.append(item);
+  item.append(icone,info,tag);
+  const remover=document.createElement('button');
+  remover.type='button';remover.className='security-remove';
+  remover.textContent='Remover';remover.disabled=ativos.length<=1;
+  remover.title=ativos.length<=1?'Mantenha pelo menos um autenticador ativo.':'Remover este autenticador';
+  remover.addEventListener('click',()=>removerAutenticador(f.id,nome.textContent,remover));
+  item.append(remover);lista.append(item);
  });
  const botao=document.getElementById('backup-mfa-start');
  botao.disabled=ativos.length>=2;
@@ -117,6 +123,30 @@ async function atualizarBackupMfa(){
  document.querySelector('.security-add-copy p').textContent=ativos.length>=2
   ?'Dois autenticadores estão ativos. Você pode usar qualquer um deles para entrar.'
   :'Cadastre um segundo aplicativo ou dispositivo para manter o acesso caso perca o principal.';
+}
+async function removerAutenticador(factorId,nome,botao){
+ if(backupMfaPendente){mensagemBackup('Conclua ou cancele o cadastro em andamento antes de remover um autenticador.',true);return;}
+ const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
+ if(erroNivel){mensagemBackup(erroNivel.message,true);return;}
+ if(nivel.currentLevel!=='aal2'){mensagemBackup('Faça login novamente com um autenticador para gerenciar seus dispositivos.',true);return;}
+ const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
+ if(erroFatores){mensagemBackup(erroFatores.message,true);return;}
+ const ativos=(fatores.totp||[]).filter(f=>f.status==='verified');
+ if(ativos.length<=1){mensagemBackup('O último autenticador não pode ser removido.',true);await atualizarBackupMfa();return;}
+ if(!ativos.some(f=>f.id===factorId)){mensagemBackup('Este autenticador não está mais ativo. Atualizando lista.',true);await atualizarBackupMfa();return;}
+ if(!window.confirm('Tem certeza que deseja remover "'+nome+'"? Você não poderá mais usar seus códigos para entrar na conta.'))return;
+ botao.disabled=true;mensagemBackup('');
+ try{
+  const {data:atual,error:erroAtual}=await cliente.auth.mfa.listFactors();
+  if(erroAtual)throw erroAtual;
+  const restantes=(atual.totp||[]).filter(f=>f.status==='verified');
+  if(restantes.length<=1||!restantes.some(f=>f.id===factorId))
+   throw new Error('Não é possível remover o último autenticador ativo.');
+  const {error}=await cliente.auth.mfa.unenroll({factorId});
+  if(error)throw error;
+  await atualizarBackupMfa();
+  mensagemBackup('Autenticador removido com sucesso. Você pode cadastrar outro dispositivo.');
+ }catch(e){mensagemBackup(e.message||'Não foi possível remover o autenticador.',true);botao.disabled=false;}
 }
 async function cancelarBackupMfa(){
  const fator=backupMfaPendente;backupMfaPendente=null;
