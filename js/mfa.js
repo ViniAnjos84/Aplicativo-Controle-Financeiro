@@ -95,9 +95,28 @@ async function atualizarBackupMfa(){
  const {data,error}=await cliente.auth.mfa.listFactors();
  if(error)throw error;
  const ativos=(data.totp||[]).filter(f=>f.status==='verified');
- document.getElementById('backup-mfa-status').textContent=ativos.length+
-  (ativos.length===1?' autenticador ativo.':' autenticadores ativos.');
- document.getElementById('backup-mfa-start').disabled=ativos.length>=2;
+ const status=document.getElementById('backup-mfa-status');
+ const lista=document.getElementById('backup-mfa-list');
+ const contador=document.getElementById('backup-mfa-count');
+ status.textContent=ativos.length===0?'Nenhum autenticador verificado.': '';
+ contador.textContent=ativos.length+' de 2 cadastrados';
+ lista.replaceChildren();
+ ativos.forEach((f,i)=>{
+  const item=document.createElement('div');item.className='security-factor';
+  const icone=document.createElement('span');icone.className='security-factor-icon';icone.textContent='⌑';icone.setAttribute('aria-hidden','true');
+  const info=document.createElement('div');info.className='security-factor-info';
+  const nome=document.createElement('strong');nome.textContent=f.friendly_name||('Autenticador '+(i+1));
+  const descricao=document.createElement('small');descricao.textContent=i===0?'Autenticador cadastrado':'Dispositivo adicional';
+  info.append(nome,descricao);
+  const tag=document.createElement('span');tag.className='security-factor-tag';tag.textContent='Ativo';
+  item.append(icone,info,tag);lista.append(item);
+ });
+ const botao=document.getElementById('backup-mfa-start');
+ botao.disabled=ativos.length>=2;
+ botao.textContent=ativos.length>=2?'Limite atingido':'Adicionar reserva';
+ document.querySelector('.security-add-copy p').textContent=ativos.length>=2
+  ?'Dois autenticadores estão ativos. Você pode usar qualquer um deles para entrar.'
+  :'Cadastre um segundo aplicativo ou dispositivo para manter o acesso caso perca o principal.';
 }
 async function cancelarBackupMfa(){
  const fator=backupMfaPendente;backupMfaPendente=null;
