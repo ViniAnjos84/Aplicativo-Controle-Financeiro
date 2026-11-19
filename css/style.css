@@ -220,3 +220,37 @@
  .mobile-settings:hover,.mobile-settings:focus-visible{background:#29364b}
  .account{gap:8px;flex-wrap:nowrap}
 }
+
+/* Segurança da conta: cartões de autenticadores */
+.security-panel{padding:26px!important}
+.security-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#a4a9ff;margin-bottom:7px}
+.security-panel .section-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.security-panel .section-head h2{margin:0 0 5px}
+.security-panel .section-head p,.security-subhead p{color:var(--muted);margin:0}
+.security-shield{display:grid;place-items:center;flex:0 0 43px;height:43px;border:1px solid #55558b;background:#282b50;border-radius:13px;color:#c9cbff;font-size:29px}
+.security-summary{display:flex;align-items:center;gap:13px;margin:23px 0 27px;padding:16px;border:1px solid #305448;background:linear-gradient(110deg,#17372f,#172a2c);border-radius:12px}
+.security-summary-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#235e49;color:#75ebbc;font-weight:800;font-size:19px}
+.security-summary-copy{display:grid;gap:3px;min-width:0;flex:1}.security-summary-copy strong{font-size:14px}.security-summary-copy span{color:#a4c6b8;font-size:12px}
+.security-state{border:1px solid #377e62;background:#235440;color:#8cf0bf;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:750}
+.security-subhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.security-subhead h3{margin:0 0 3px;font-size:15px}.security-subhead p{font-size:12px}
+.security-count{white-space:nowrap;background:#242d42;color:#b8c4db;border:1px solid #39445b;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:650}
+.security-status{font-size:12px;color:var(--muted);margin:0 0 10px}
+.security-factor-list{display:grid;gap:9px;margin-bottom:16px}.security-factor{display:flex;gap:12px;align-items:center;padding:13px 15px;border:1px solid #344052;border-radius:11px;background:#111a27}
+.security-factor-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#252c4e;color:#bdc3ff;border-radius:10px;font-size:18px}
+.security-factor-info{display:grid;gap:2px;min-width:0;flex:1}.security-factor-info strong{font-size:13px;overflow-wrap:anywhere}.security-factor-info small{font-size:11px;color:var(--muted)}
+.security-factor-tag{font-size:11px;color:#77dfb0;background:#1d4036;border-radius:20px;padding:4px 9px;white-space:nowrap}
+.security-add-card{display:flex;align-items:center;gap:13px;padding:16px;border:1px dashed #4b5674;border-radius:12px;background:#1a2231}
+.security-add-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:#292f50;color:#b6bcff;font-size:25px}
+.security-add-copy{flex:1;min-width:0}.security-add-copy strong{font-size:13px}.security-add-copy p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.security-primary,.security-secondary{font:inherit;font-size:12px;font-weight:700;border-radius:9px;padding:11px 14px;cursor:pointer;white-space:nowrap}
+.security-primary{background:#777df0;color:white;border:1px solid #9095ff}.security-primary:hover:not(:disabled){background:#8a90ff}
+.security-secondary{background:#252d3b;color:#c8d2e0;border:1px solid #414e60}.security-secondary:hover{background:#303c50}
+.security-primary:disabled{opacity:.55;cursor:not-allowed}
+.security-enroll{margin-top:16px;border:1px solid #414e67;border-radius:12px;background:#111a28;padding:20px}.security-enroll[hidden]{display:none!important}
+.security-enroll-head strong{font-size:14px}.security-enroll-head p{color:var(--muted);font-size:12px;margin:4px 0 14px}
+.security-qr-box{display:flex;justify-content:center}.security-enroll .mfa-qr{margin:0 auto 18px}
+.security-secret-label{display:block;font-size:12px;color:#aebcd0;margin:0 0 7px}.security-enroll .mfa-secret{margin-bottom:16px}
+.security-enroll form{display:grid;gap:9px}.security-enroll form label{font-size:12px;font-weight:650}.security-enroll form input{width:100%;max-width:240px;background:#0d1420;border:1px solid #45536b;border-radius:9px;color:white;padding:12px;font:inherit;font-size:18px;letter-spacing:5px;text-align:center}
+.security-enroll-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:5px}.security-feedback{font-size:12px;margin:12px 0 0}.security-feedback:empty{display:none}
+.security-footnote{font-size:11px;line-height:1.6;color:#8796ab;margin:17px 0 0}
+@media(max-width:650px){.security-panel{padding:17px!important}.security-summary{flex-wrap:wrap}.security-state{margin-left:49px}.security-add-card{flex-wrap:wrap}.security-add-copy{flex-basis:calc(100% - 55px)}.security-add-card .security-primary{width:100%}.security-subhead{align-items:flex-start;flex-wrap:wrap}.security-enroll{padding:15px}.security-enroll-actions button{flex:1}}
