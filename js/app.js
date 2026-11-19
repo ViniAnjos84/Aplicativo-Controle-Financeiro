@@ -114,6 +114,7 @@ iniciar();
 
 function navegar(pagina){if(!['resumo','credito','investimentos','configuracoes'].includes(pagina))pagina='resumo';document.querySelectorAll('[data-view]').forEach(el=>{el.hidden=el.dataset.view!==pagina});document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===pagina));if(pagina==='credito')atualizarCredito(dados);if(pagina==='investimentos')atualizarInvestimentos(dados);window.scrollTo(0,0)}
 document.querySelectorAll('[data-page]').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();const pagina=link.dataset.page;navegar(pagina);history.replaceState(null,'','#'+pagina)}));
+document.querySelectorAll('[data-mobile-settings]').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();navegar('configuracoes');history.replaceState(null,'','#configuracoes')}));
 document.querySelector('.credit-logout').addEventListener('click',()=>document.getElementById('logout-button').click());
 document.querySelector('.invest-logout').addEventListener('click',()=>document.getElementById('logout-button').click());
 window.addEventListener('hashchange',()=>navegar(location.hash.slice(1)));

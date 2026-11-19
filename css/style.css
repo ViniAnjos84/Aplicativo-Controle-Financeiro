@@ -209,3 +209,14 @@
 .login-card .forgot-password:hover,.login-card .auth-back:hover{text-decoration:underline}
 .login-card .auth-back{display:block;margin:15px auto 0}
 .login-card #recover-message.success,.login-card #reset-message.success{color:#65dfb2}
+
+/* Ajustes exclusivos para telas pequenas: um único olho e acesso às configurações no topo. */
+.login-card input[type="password"]::-ms-reveal,
+.login-card input[type="password"]::-ms-clear{display:none}
+.mobile-settings{display:none}
+@media(max-width:700px){
+ .sidebar .nav-settings{display:none}
+ .mobile-settings{display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:38px;border:1px solid #354157;border-radius:9px;background:#1b2636;color:#e5ebf5;text-decoration:none;font-size:20px;line-height:1}
+ .mobile-settings:hover,.mobile-settings:focus-visible{background:#29364b}
+ .account{gap:8px;flex-wrap:nowrap}
+}
