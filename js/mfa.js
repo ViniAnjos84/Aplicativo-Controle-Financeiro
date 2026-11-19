@@ -26,7 +26,7 @@ async function exigirMfa(usuario){
   // Sempre consultar o nível da sessão: restaurar a página não pode pular o MFA.
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
-  if(nivel.currentLevel==='aal2'){ocultarMfa();await carregarPainel(usuario);return;}
+  if(nivel.currentLevel==='aal2'){ocultarMfa();await prosseguirAposMfa(usuario);return;}
   const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
   if(erroFatores)throw erroFatores;
   const verificado=fatores.totp?.find(f=>f.status==='verified');
@@ -72,7 +72,7 @@ document.getElementById('mfa-form').addEventListener('submit',async evento=>{
     if(nivel.currentLevel!=='aal2')throw new Error('A verificação não elevou a sessão para aal2.');
     const usuario=mfaPendente.usuario;
     ocultarMfa();
-    await carregarPainel(usuario);
+    await prosseguirAposMfa(usuario);
   }catch(erro){mfaErro.textContent=erro.message||'Não foi possível validar o código.';}
   finally{mfaBotao.disabled=false;}
 });
