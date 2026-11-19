@@ -3,7 +3,48 @@ const loginScreen=document.getElementById('login-screen'), dashboard=document.ge
 const form=document.getElementById('login-form'), aviso=document.getElementById('login-error');
 const anoEl=document.getElementById('ano'),categoriaEl=document.getElementById('categoria');
 let dados=[], cliente=null;
-function mostrarLogin(){loginScreen.hidden=false;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;document.getElementById('recover-screen').hidden=true;document.getElementById('reset-screen').hidden=true;document.getElementById('login-password').value=''}
+function mostrarLogin(){loginScreen.hidden=false;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;document.getElementById('recover-screen').hidden=true;document.getElementById('reset-screen').hidden=true;document.getElementById('first-password-screen').hidden=true;document.getElementById('login-password').value=''}
+async function prosseguirAposMfa(usuario){
+ const {data,error}=await cliente.auth.getUser();
+ if(error)throw error;
+ if(!data.user)throw new Error('Sessão inválida.');
+ if(data.user.app_metadata?.must_change_password===true){
+  loginScreen.hidden=true;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;
+  document.getElementById('first-password-screen').hidden=false;
+  document.getElementById('first-password-form').reset();
+  document.getElementById('first-password-error').textContent='';
+  document.getElementById('first-password').focus();
+  return;
+ }
+ await carregarPainel(data.user);
+}
+document.getElementById('first-password-form').addEventListener('submit',async evento=>{
+ evento.preventDefault();
+ const senha=document.getElementById('first-password').value;
+ const confirmar=document.getElementById('first-password-confirm').value;
+ const aviso=document.getElementById('first-password-error');
+ const botao=document.getElementById('first-password-submit');
+ aviso.textContent='';
+ if(senha!==confirmar){aviso.textContent='As senhas não coincidem.';return;}
+ botao.disabled=true;
+ try{
+  const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(erroNivel)throw erroNivel;
+  if(nivel.currentLevel!=='aal2')throw new Error('Confirme seu Google Authenticator antes de trocar a senha.');
+  const {error}=await cliente.auth.updateUser({password:senha});
+  if(error)throw error;
+  const {data,error:erroUsuario}=await cliente.auth.getUser();
+  if(erroUsuario)throw erroUsuario;
+  if(data.user?.app_metadata?.must_change_password===true)throw new Error('A alteração não foi confirmada pelo servidor. Tente novamente.');
+  document.getElementById('first-password-screen').hidden=true;
+  document.getElementById('first-password-form').reset();
+  await carregarPainel(data.user);
+ }catch(erro){aviso.textContent=erro.message||'Não foi possível trocar a senha.'}
+ finally{botao.disabled=false}
+});
+document.getElementById('first-password-logout').addEventListener('click',async()=>{
+ await cliente.auth.signOut();dados=[];mostrarLogin();
+});
 function mostrarPainel(){loginScreen.hidden=true;dashboard.hidden=false}
 function configurarAnos(){const anos=[...new Set([...dados.map(m=>Number(m.data.slice(0,4))),new Date().getFullYear()])].sort((a,b)=>b-a);anoEl.innerHTML=anos.map(a=>`<option value="${a}">${a}</option>`).join('');anoEl.value=String(new Date().getFullYear());iniciarDatas('');configurarCredito(dados);configurarInvestimentos(dados);configurarCategorias();configurarFiltrosExtras()}
 function configurarCategorias(){const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));for(const id of ['categoria','credito-categoria']){const el=document.getElementById(id),anterior=el.value;el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([chave,nome])=>`<option value="${escapar(chave)}">${escapar(nome)}</option>`).join('');el.value=categorias.some(([chave])=>chave===anterior)?anterior:'todas';montarMultiFiltro(id)}}
@@ -16,7 +57,7 @@ async function carregarPainel(usuario){document.getElementById('user-email').tex
 // A sessão criada pelo link de recuperação não deve abrir o painel nem iniciar o MFA.
 let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
 const recoverScreen=document.getElementById('recover-screen'),resetScreen=document.getElementById('reset-screen');
-function exibirTelaAuth(tela){loginScreen.hidden=true;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;recoverScreen.hidden=tela!=='recover';resetScreen.hidden=tela!=='reset'}
+function exibirTelaAuth(tela){loginScreen.hidden=true;dashboard.hidden=true;document.getElementById('first-password-screen').hidden=true;document.getElementById('mfa-screen').hidden=true;recoverScreen.hidden=tela!=='recover';resetScreen.hidden=tela!=='reset'}
 let resetMfaVerificado=false,resetMfaFator=null;
 async function prepararRecuperacao(){
  recuperandoSenha=true;exibirTelaAuth('reset');
