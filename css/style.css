@@ -254,3 +254,9 @@
 .security-enroll-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:5px}.security-feedback{font-size:12px;margin:12px 0 0}.security-feedback:empty{display:none}
 .security-footnote{font-size:11px;line-height:1.6;color:#8796ab;margin:17px 0 0}
 @media(max-width:650px){.security-panel{padding:17px!important}.security-summary{flex-wrap:wrap}.security-state{margin-left:49px}.security-add-card{flex-wrap:wrap}.security-add-copy{flex-basis:calc(100% - 55px)}.security-add-card .security-primary{width:100%}.security-subhead{align-items:flex-start;flex-wrap:wrap}.security-enroll{padding:15px}.security-enroll-actions button{flex:1}}
+
+/* Ação de remoção de autenticadores */
+.security-remove{border:1px solid #754151;border-radius:8px;background:#35212c;color:#ffb8c5;padding:8px 11px;font:inherit;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap}
+.security-remove:hover:not(:disabled){background:#502735;border-color:#b96073}
+.security-remove:disabled{opacity:.35;cursor:not-allowed}
+@media(max-width:650px){.security-factor{flex-wrap:wrap}.security-factor-info{flex-basis:calc(100% - 65px)}.security-factor-tag{margin-left:50px}.security-remove{margin-left:auto}}
