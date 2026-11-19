@@ -53,7 +53,7 @@ function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document
  const historico=filtrarPendentes(filtrados,'');document.getElementById('contagem').textContent=`${historico.length} ${historico.length===1?'registro':'registros'}`;
  document.getElementById('movimentacoes').innerHTML=historico.length?historico.map(m=>{const tipo=normalizar(m.tipo_movimentacao)==='entrada'?'entrada':'saida';return `<tr><td data-label="Descrição">${escapar(m.descricao||"Sem descrição")} ${avisoRegistro(m)}</td><td data-label="Categoria">${escapar(m.categoria)}</td><td data-label="Pagamento">${escapar(m.forma_pagamento||'—')}</td><td data-label="Data">${dataBR(m.data)}</td><td data-label="Tipo"><span class="type ${tipo}">${tipo==='entrada'?'Entrada':'Saída'}</span></td><td data-label="Valor" class="right"><span class="money ${tipo}">${tipo==='entrada'?'+':'−'} ${moeda(m.valor)}</span></td><td data-label="Ações">${acoesRegistro(m)}</td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Nenhuma movimentação encontrada para o período selecionado.</td></tr>';
  renderizarGrafico(filtrados);renderizarFluxoMensal(dados.filter(m=>opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria'))&&filtrarExtras(m,'')),anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
-async function carregarPainel(usuario){document.getElementById('user-email').textContent=usuario.email||'';document.getElementById('credit-user-email').textContent=usuario.email||'';document.getElementById('invest-user-email').textContent=usuario.email||'';dados=await buscarMovimentacoes(cliente);await carregarPagamentos();configurarAnos();atualizar();mostrarPainel()}
+async function carregarPainel(usuario){document.getElementById('user-email').textContent=usuario.email||'';document.getElementById('credit-user-email').textContent=usuario.email||'';document.getElementById('invest-user-email').textContent=usuario.email||'';dados=await buscarMovimentacoes(cliente);await carregarPagamentos();await atualizarBackupMfa();configurarAnos();atualizar();mostrarPainel()}
 // A sessão criada pelo link de recuperação não deve abrir o painel nem iniciar o MFA.
 let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
 const recoverScreen=document.getElementById('recover-screen'),resetScreen=document.getElementById('reset-screen');
@@ -63,16 +63,22 @@ async function prepararRecuperacao(){
  recuperandoSenha=true;exibirTelaAuth('reset');
  const formMfa=document.getElementById('reset-mfa-form'),formSenha=document.getElementById('reset-form');
  const msg=document.getElementById('reset-mfa-message');
- msg.textContent='';formSenha.hidden=true;formMfa.hidden=true;resetMfaVerificado=false;resetMfaFator=null;
+ msg.textContent='';formSenha.hidden=true;formMfa.hidden=true;document.getElementById('reset-factor-choice').hidden=true;resetMfaVerificado=false;resetMfaFator=null;
  try{
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
   if(nivel.currentLevel==='aal2'){resetMfaVerificado=true;formSenha.hidden=false;return}
   const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
   if(erroFatores)throw erroFatores;
-  const fator=fatores.totp?.find(f=>f.status==='verified');
-  if(!fator)throw new Error('Nenhum autenticador verificado encontrado. Contate o administrador para recuperar o acesso.');
-  resetMfaFator=fator.id;formMfa.hidden=false;document.getElementById('reset-mfa-code').focus();
+  const verificados=(fatores.totp||[]).filter(f=>f.status==='verified');
+  if(!verificados.length)throw new Error('Nenhum autenticador verificado encontrado. Contate o administrador para recuperar o acesso.');
+  resetMfaFator=verificados[0].id;
+  const escolha=document.getElementById('reset-factor-choice');
+  const select=document.getElementById('reset-factor-select');
+  escolha.hidden=verificados.length<2;
+  select.replaceChildren(...verificados.map((f,i)=>new Option(f.friendly_name||('Autenticador '+(i+1)),f.id)));
+  select.onchange=()=>{resetMfaFator=select.value;};
+  formMfa.hidden=false;document.getElementById('reset-mfa-code').focus();
  }catch(err){msg.textContent=err.message||'Não foi possível preparar a recuperação.';formMfa.hidden=false;document.getElementById('reset-mfa-submit').disabled=true}
 }
 document.getElementById('reset-mfa-form').addEventListener('submit',async e=>{
