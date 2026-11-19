@@ -79,3 +79,76 @@ document.getElementById('lista-pagamentos').addEventListener('click', async e =>
     else { await carregarPagamentos(); avisoPagamento('Forma de pagamento excluída.'); }
   }
 });
+
+
+// Cadastro de fontes: opções personalizadas por usuário.
+let fontesPersonalizadas=[];
+async function carregarFontes(){
+ const {data,error}=await cliente.from('fontes_pagamento').select('id,nome').order('nome');
+ if(error)throw error;
+ fontesPersonalizadas=data||[];
+ renderizarFontes();
+}
+function renderizarFontes(){
+ const lista=document.getElementById('lista-fontes');
+ lista.innerHTML=fontesPersonalizadas.length?fontesPersonalizadas.map(f=>
+  '<li><span>'+escapar(f.nome)+'</span><div class="payment-actions"><button type="button" data-renomear-fonte="'+f.id+'">Renomear</button><button type="button" data-excluir-fonte="'+f.id+'">Excluir</button></div></li>'
+ ).join(''):'<li><small>Nenhuma fonte cadastrada. Adicione uma acima.</small></li>';
+}
+function avisoFonte(mensagem,erro=false){
+ const el=document.getElementById('fonte-feedback');
+ el.textContent=mensagem;el.style.color=erro?'var(--red)':'var(--green)';
+}
+function validarFonte(nome,ignorarId=null){
+ const valor=nome.trim().replace(/\s+/g,' ');
+ if(!valor||valor.length>100)throw new Error('Informe um nome com até 100 caracteres.');
+ if(fontesPersonalizadas.some(f=>f.id!==ignorarId&&normalizar(f.nome)===normalizar(valor)))
+  throw new Error('Essa fonte já está cadastrada.');
+ return valor;
+}
+async function salvarFonte(nome,id=null){
+ const valor=validarFonte(nome,id);
+ const {data:{user},error:erroAuth}=await cliente.auth.getUser();
+ if(erroAuth||!user)throw new Error('Faça login novamente.');
+ const consulta=id===null
+  ?cliente.from('fontes_pagamento').insert({nome:valor,user_id:user.id})
+  :cliente.from('fontes_pagamento').update({nome:valor}).eq('id',id).eq('user_id',user.id);
+ const {error}=await consulta;
+ if(error)throw error;
+ await carregarFontes();
+}
+document.getElementById('form-fonte').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const input=document.getElementById('nova-fonte'),botao=e.currentTarget.querySelector('button[type="submit"]');
+ botao.disabled=true;
+ try{await salvarFonte(input.value);input.value='';avisoFonte('Fonte adicionada.');}
+ catch(erro){avisoFonte(erro.message,true);}
+ finally{botao.disabled=false;}
+});
+document.getElementById('lista-fontes').addEventListener('click',async e=>{
+ const renomear=e.target.closest('[data-renomear-fonte]');
+ const excluir=e.target.closest('[data-excluir-fonte]');
+ if(!renomear&&!excluir)return;
+ const botao=renomear||excluir,id=Number(renomear?botao.dataset.renomearFonte:botao.dataset.excluirFonte);
+ const fonte=fontesPersonalizadas.find(f=>f.id===id);
+ if(!fonte)return;
+ if(renomear){
+  const nome=prompt('Novo nome da fonte:',fonte.nome);
+  if(nome===null)return;
+  botao.disabled=true;
+  try{await salvarFonte(nome,id);avisoFonte('Fonte renomeada.');}
+  catch(erro){avisoFonte(erro.message,true);}
+  finally{botao.disabled=false;}
+ }else{
+  if(!confirm('Excluir "'+fonte.nome+'" das opções? Movimentações antigas serão mantidas.'))return;
+  botao.disabled=true;
+  try{
+   const {data:{user},error:erroAuth}=await cliente.auth.getUser();
+   if(erroAuth||!user)throw new Error('Faça login novamente.');
+   const {error}=await cliente.from('fontes_pagamento').delete().eq('id',id).eq('user_id',user.id);
+   if(error)throw error;
+   await carregarFontes();avisoFonte('Fonte excluída.');
+  }catch(erro){avisoFonte(erro.message,true);}
+  finally{botao.disabled=false;}
+ }
+});
