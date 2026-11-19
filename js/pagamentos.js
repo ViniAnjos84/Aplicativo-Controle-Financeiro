@@ -116,6 +116,7 @@ async function salvarFonte(nome,id=null){
  const {error}=await consulta;
  if(error)throw error;
  await carregarFontes();
+ if(id!==null)await recarregar();
 }
 document.getElementById('form-fonte').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -136,18 +137,18 @@ document.getElementById('lista-fontes').addEventListener('click',async e=>{
   const nome=prompt('Novo nome da fonte:',fonte.nome);
   if(nome===null)return;
   botao.disabled=true;
-  try{await salvarFonte(nome,id);avisoFonte('Fonte renomeada.');}
+  try{await salvarFonte(nome,id);avisoFonte('Fonte renomeada e atualizada nas movimentações vinculadas.');}
   catch(erro){avisoFonte(erro.message,true);}
   finally{botao.disabled=false;}
  }else{
-  if(!confirm('Excluir "'+fonte.nome+'" das opções? Movimentações antigas serão mantidas.'))return;
+  if(!confirm('Excluir "'+fonte.nome+'"? A fonte também será removida de todas as movimentações que a utilizam. As movimentações e seus valores serão preservados.'))return;
   botao.disabled=true;
   try{
    const {data:{user},error:erroAuth}=await cliente.auth.getUser();
    if(erroAuth||!user)throw new Error('Faça login novamente.');
    const {error}=await cliente.from('fontes_pagamento').delete().eq('id',id).eq('user_id',user.id);
    if(error)throw error;
-   await carregarFontes();avisoFonte('Fonte excluída.');
+   await carregarFontes();await recarregar();avisoFonte('Fonte excluída e removida das movimentações vinculadas.');
   }catch(erro){avisoFonte(erro.message,true);}
   finally{botao.disabled=false;}
  }
