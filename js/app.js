@@ -47,7 +47,15 @@ document.getElementById('first-password-logout').addEventListener('click',async(
 });
 function mostrarPainel(){loginScreen.hidden=true;dashboard.hidden=false}
 function configurarAnos(){const anos=[...new Set([...dados.map(m=>Number(m.data.slice(0,4))),new Date().getFullYear()])].sort((a,b)=>b-a);anoEl.innerHTML=anos.map(a=>`<option value="${a}">${a}</option>`).join('');anoEl.value=String(new Date().getFullYear());iniciarDatas('');configurarCredito(dados);configurarInvestimentos(dados);configurarCategorias();configurarFiltrosExtras()}
-function configurarCategorias(){const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));for(const id of ['categoria','credito-categoria']){const el=document.getElementById(id),anterior=el.value;el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([chave,nome])=>`<option value="${escapar(chave)}">${escapar(nome)}</option>`).join('');el.value=categorias.some(([chave])=>chave===anterior)?anterior:'todas';montarMultiFiltro(id)}}
+function configurarCategorias(){
+ const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
+ for(const id of ['categoria','credito-categoria']){
+  const el=document.getElementById(id),selecionadas=valoresSelecionados(id);
+  el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');
+  for(const o of el.options)o.selected=selecionadas.includes(o.value);
+  montarMultiFiltro(id);
+ }
+}
 function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value).filter(m=>(opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria')))&&filtrarExtras(m,'')),resumo=calcularResumo(filtrados);
  for(const chave of ['entradas','saidas','credito','investimentos'])document.getElementById(chave).textContent=moeda(resumo[chave]);
  const historico=filtrarPendentes(filtrados,'');document.getElementById('contagem').textContent=`${historico.length} ${historico.length===1?'registro':'registros'}`;
@@ -168,17 +176,27 @@ window.addEventListener('hashchange',()=>navegar(location.hash.slice(1)));
 navegar(location.hash.slice(1));
 document.querySelector('[data-go-settings]').addEventListener('click', e => { e.preventDefault(); modal.close(); navegar('configuracoes'); history.replaceState(null,'','#configuracoes'); });
 
-function iniciarDatas(prefix){const mes=String(new Date().getMonth()+1).padStart(2,'0');document.getElementById(prefix+'inicio').value=mes;document.getElementById(prefix+'fim').value=mes}
-function ajustarAno(prefix){const ano=Number(document.getElementById(prefix+'ano').value),hoje=new Date(),mes=ano===hoje.getFullYear()?hoje.getMonth()+1:12;document.getElementById(prefix+'inicio').value=String(mes).padStart(2,'0');document.getElementById(prefix+'fim').value=String(mes).padStart(2,'0')}
-function sincronizarAno(prefix,id){const ini=document.getElementById(prefix+'inicio'),fim=document.getElementById(prefix+'fim');if(ini.value>fim.value){if(id==='inicio')fim.value=ini.value;else ini.value=fim.value}}
+function montarSeletorMes(id){
+ const el=document.getElementById(id),caixa=document.querySelector('[data-mes="'+id+'"]');if(!el||!caixa)return;
+ caixa.querySelector('summary').textContent=el.selectedOptions[0]?.textContent||'Selecione o mês';
+ caixa.querySelector('.month-options').innerHTML=[...el.options].map(o=>'<button type="button" class="month-option" data-month-value="'+escapar(o.value)+'" aria-pressed="'+(o.value===el.value)+'">'+escapar(o.textContent)+'</button>').join('');
+}
+for(const prefix of ['','credito-','invest-'])for(const campo of ['inicio','fim']){
+ const id=prefix+campo,el=document.getElementById(id),caixa=document.querySelector('[data-mes="'+id+'"]');
+ montarSeletorMes(id);el.addEventListener('change',()=>montarSeletorMes(id));
+ caixa.addEventListener('click',e=>{const b=e.target.closest('[data-month-value]');if(!b)return;el.value=b.dataset.monthValue;el.dispatchEvent(new Event('change',{bubbles:true}));for(const outro of ['inicio','fim'])montarSeletorMes(prefix+outro);caixa.open=false});
+}
+function iniciarDatas(prefix){const mes=String(new Date().getMonth()+1).padStart(2,'0');document.getElementById(prefix+'inicio').value=mes;document.getElementById(prefix+'fim').value=mes;for(const campo of ['inicio','fim'])montarSeletorMes(prefix+campo)}
+function ajustarAno(prefix){const ano=Number(document.getElementById(prefix+'ano').value),hoje=new Date(),mes=ano===hoje.getFullYear()?hoje.getMonth()+1:12;document.getElementById(prefix+'inicio').value=String(mes).padStart(2,'0');document.getElementById(prefix+'fim').value=String(mes).padStart(2,'0');for(const campo of ['inicio','fim'])montarSeletorMes(prefix+campo)}
+function sincronizarAno(prefix,id){const ini=document.getElementById(prefix+'inicio'),fim=document.getElementById(prefix+'fim');if(ini.value>fim.value){if(id==='inicio')fim.value=ini.value;else ini.value=fim.value}for(const campo of ['inicio','fim'])montarSeletorMes(prefix+campo)}
 const modal=document.getElementById('entry-dialog'),formEntry=document.getElementById('entry-form');let editingId=null,deletingId=null;
-function abrirFormulario(id=null){editingId=id;formEntry.reset();document.getElementById('entry-error').textContent='';document.getElementById('entry-title').textContent=id?'Editar movimentação':'Nova movimentação';const m=dados.find(r=>String(r.id)===String(id));formEntry.elements.tipo_movimentacao.value=m?.tipo_movimentacao||'saida';for(const k of ['descricao','valor','categoria'])formEntry.elements[k].value=m?.[k]??'';formEntry.elements.data.value=m?.data||new Date().toLocaleDateString('en-CA');configurarPagamentosFormulario(m?.forma_pagamento||'');configurarFontesFormulario(m?.fonte_pagamento||'');modal.showModal()}
+function abrirFormulario(id=null){editingId=id;formEntry.reset();document.getElementById('entry-error').textContent='';document.getElementById('entry-title').textContent=id?'Editar movimentação':'Nova movimentação';const m=dados.find(r=>String(r.id)===String(id));formEntry.elements.tipo_movimentacao.value=m?.tipo_movimentacao||'saida';for(const k of ['descricao','valor'])formEntry.elements[k].value=m?.[k]??'';configurarCategoriaFormulario(m?.categoria||'');formEntry.elements.data.value=m?.data||new Date().toLocaleDateString('en-CA');configurarPagamentosFormulario(m?.forma_pagamento||'');configurarFontesFormulario(m?.fonte_pagamento||'');modal.showModal()}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>abrirFormulario()));
 document.getElementById('entry-close').onclick=()=>modal.close();document.getElementById('entry-cancel').onclick=()=>modal.close();
 document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');if(edit)abrirFormulario(edit.dataset.edit);if(del){deletingId=del.dataset.delete;document.getElementById('delete-description').textContent=dados.find(m=>String(m.id)===String(deletingId))?.descricao||'';document.getElementById('delete-error').textContent='';document.getElementById('delete-dialog').showModal()}});
 document.getElementById('delete-cancel').onclick=()=>document.getElementById('delete-dialog').close();
 async function recarregar(){dados=await buscarMovimentacoes(cliente);configurarCategorias();configurarFiltrosExtras();atualizar();atualizarCredito(dados);atualizarInvestimentos(dados)}
-formEntry.addEventListener('submit',async e=>{e.preventDefault();const save=document.getElementById('entry-save');save.disabled=true;document.getElementById('entry-error').textContent='';try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada. Entre novamente.');const payload={};for(const k of ['tipo_movimentacao','descricao','valor','categoria','forma_pagamento','fonte_pagamento','data'])payload[k]=formEntry.elements[k].value.trim();payload.fonte_pagamento=payload.fonte_pagamento||null;payload.valor=Number(payload.valor);if(!Number.isFinite(payload.valor)||payload.valor<0)throw new Error('Valor inválido.');let query;if(editingId){query=cliente.from('movimentacoes').update(payload).eq('id',editingId).eq('user_id',user.id).select('id')}else{query=cliente.from('movimentacoes').insert({...payload,user_id:user.id}).select('id')}const {data:salvos,error}=await query;if(error)throw error;if(!salvos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();modal.close()}catch(err){document.getElementById('entry-error').textContent=err.message}finally{save.disabled=false}});
+formEntry.addEventListener('submit',async e=>{e.preventDefault();const save=document.getElementById('entry-save');save.disabled=true;document.getElementById('entry-error').textContent='';try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada. Entre novamente.');const payload={};for(const k of ['tipo_movimentacao','descricao','valor','categoria','forma_pagamento','fonte_pagamento','data'])payload[k]=formEntry.elements[k].value.trim();payload.categoria=document.getElementById('categoria-nova').hidden?formEntry.elements.categoria.value.trim():document.getElementById('categoria-nova').value.trim();if(!payload.categoria||payload.categoria.length>100)throw new Error('Informe uma categoria com até 100 caracteres.');payload.fonte_pagamento=payload.fonte_pagamento||null;payload.valor=Number(payload.valor);if(!Number.isFinite(payload.valor)||payload.valor<0)throw new Error('Valor inválido.');let query;if(editingId){query=cliente.from('movimentacoes').update(payload).eq('id',editingId).eq('user_id',user.id).select('id')}else{query=cliente.from('movimentacoes').insert({...payload,user_id:user.id}).select('id')}const {data:salvos,error}=await query;if(error)throw error;if(!salvos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();modal.close()}catch(err){document.getElementById('entry-error').textContent=err.message}finally{save.disabled=false}});
 document.getElementById('delete-confirm').onclick=async()=>{const b=document.getElementById('delete-confirm');b.disabled=true;try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada.');const {data:removidos,error}=await cliente.from('movimentacoes').delete().eq('id',deletingId).eq('user_id',user.id).select('id');if(error)throw error;if(!removidos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();document.getElementById('delete-dialog').close()}catch(e){document.getElementById('delete-error').textContent=e.message}finally{b.disabled=false}};
 
 function configurarFiltrosExtras(){
@@ -205,6 +223,21 @@ function filtrarExtras(m,prefix){
 }
 for(const prefix of ['','credito-','invest-']){const controls=document.getElementById(prefix+'filter-controls'),botao=document.querySelector('[aria-controls="'+controls.id+'"]');botao.addEventListener('click',()=>{const aberto=botao.getAttribute('aria-expanded')==='true';botao.setAttribute('aria-expanded',String(!aberto));botao.setAttribute('aria-label',aberto?'Mostrar filtros':'Ocultar filtros');botao.title=aberto?'Mostrar filtros':'Ocultar filtros';controls.hidden=aberto});for(const campo of ['tipo','pagamento','fonte'])montarMultiFiltro(prefix+campo)}
 
+function configurarCategoriaFormulario(atual=''){
+ const select=formEntry.elements.categoria,nomes=new Map();
+ for(const m of dados){const v=(m.categoria||'').trim();if(v)nomes.set(normalizar(v),v)}
+ if(atual&&!nomes.has(normalizar(atual)))nomes.set(normalizar(atual),atual);
+ select.innerHTML='<option value="">Selecione uma categoria</option>'+ [...nomes.values()].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');
+ select.value=nomes.get(normalizar(atual))||'';
+ document.getElementById('categoria-nova').hidden=true;document.getElementById('categoria-nova').value='';
+ select.hidden=false;const botao=document.getElementById('categoria-alternar');botao.textContent='+';botao.setAttribute('aria-label','Criar nova categoria');
+}
+document.getElementById('categoria-alternar').addEventListener('click',()=>{
+ const select=formEntry.elements.categoria,input=document.getElementById('categoria-nova'),novo=input.hidden;
+ input.hidden=!novo;select.hidden=novo;
+ if(novo){input.value='';input.focus()}else input.value='';
+ const b=document.getElementById('categoria-alternar');b.textContent=novo?'↩':'+';b.setAttribute('aria-label',novo?'Selecionar categoria existente':'Criar nova categoria');
+});
 function configurarPagamentosFormulario(atual='') {
  const el=formEntry.elements.forma_pagamento;
  const valores=new Map();
@@ -213,7 +246,7 @@ function configurarPagamentosFormulario(atual='') {
  if(atual&&!valores.has(normalizar(atual))) valores.set(normalizar(atual),atual);
  const opcoes=[...valores.values()];
  el.innerHTML='<option value="">Selecione a forma de pagamento</option>'+opcoes.map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');
- el.value=atual||'';
+ el.value=valores.get(normalizar(atual))||'';
 }
 
 function configurarFontesFormulario(atual=''){
@@ -241,22 +274,20 @@ for(const prefix of ['','credito-','invest-']){
 
 function valoresSelecionados(id){const el=document.getElementById(id);return el?[...el.selectedOptions].map(o=>o.value).filter(v=>v!=='todos'&&v!=='todas'):[]}
 function opcaoSelecionada(id,valor){const selecionados=valoresSelecionados(id);return !selecionados.length||selecionados.includes(valor)}
+function atualizarFiltroPorId(id){if(id.startsWith('credito-'))atualizarCredito(dados);else if(id.startsWith('invest-'))atualizarInvestimentos(dados);else atualizar()}
 function montarMultiFiltro(id){
  const el=document.getElementById(id),caixa=document.querySelector('[data-multi="'+id+'"]');if(!el||!caixa)return;
- const atuais=valoresSelecionados(id),opcoes=[...el.options].filter(o=>o.value!=='todos'&&o.value!=='todas');
- for(const o of el.options)o.selected=atuais.includes(o.value);
- caixa.querySelector('.multi-options').innerHTML=opcoes.map(o=>'<label><input type="checkbox" value="'+escapar(o.value)+'" '+(atuais.includes(o.value)?'checked':'')+'><span>'+escapar(o.textContent)+'</span></label>').join('');
- caixa.querySelector('summary').textContent=atuais.length?atuais.length===1?(opcoes.find(o=>o.value===atuais[0])?.textContent||'1 selecionado'):atuais.length+' selecionados':'Todas as opções';
+ const atuais=valoresSelecionados(id),opcoes=[...el.options].filter(o=>o.value!=='todos'&&o.value!=='todas'),todos=opcoes.length>0&&atuais.length===opcoes.length;
+ caixa.querySelector('.multi-options').innerHTML='<label class="multi-all"><input type="checkbox" data-select-all '+(todos?'checked':'')+'><span>Marcar/desmarcar todos</span></label>'+opcoes.map(o=>'<label><input type="checkbox" value="'+escapar(o.value)+'" '+(atuais.includes(o.value)?'checked':'')+'><span>'+escapar(o.textContent)+'</span></label>').join('');
+ caixa.querySelector('summary').textContent=atuais.length?(todos?'Todas as opções':atuais.length===1?(opcoes.find(o=>o.value===atuais[0])?.textContent||'1 selecionado'):atuais.length+' selecionados'):'Todas as opções';
 }
 for(const caixa of document.querySelectorAll('[data-multi]')){
  caixa.addEventListener('change',e=>{
   if(!e.target.matches('input[type="checkbox"]'))return;
-  const id=caixa.dataset.multi,el=document.getElementById(id),valores=[...caixa.querySelectorAll('input:checked')].map(i=>i.value);
-  for(const o of el.options)o.selected=valores.includes(o.value);
-  montarMultiFiltro(id);
-  if(id.startsWith('credito-'))atualizarCredito(dados);
-  else if(id.startsWith('invest-'))atualizarInvestimentos(dados);
-  else atualizar();
+  const id=caixa.dataset.multi,el=document.getElementById(id);
+  if(e.target.matches('[data-select-all]')){for(const o of el.options)o.selected=o.value!=='todos'&&o.value!=='todas'&&e.target.checked}
+  else{const valores=[...caixa.querySelectorAll('input:checked:not([data-select-all])')].map(i=>i.value);for(const o of el.options)o.selected=valores.includes(o.value)}
+  montarMultiFiltro(id);atualizarFiltroPorId(id);
  });
 }
 document.addEventListener('click',e=>{for(const caixa of document.querySelectorAll('[data-multi][open]'))if(!caixa.contains(e.target))caixa.open=false});
