@@ -230,11 +230,11 @@ function configurarCategoriaFormulario(atual=''){
  select.innerHTML='<option value="">Selecione uma categoria</option>'+ [...nomes.values()].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');
  select.value=nomes.get(normalizar(atual))||'';
  document.getElementById('categoria-nova').hidden=true;document.getElementById('categoria-nova').value='';
- select.hidden=false;const botao=document.getElementById('categoria-alternar');botao.textContent='+';botao.setAttribute('aria-label','Criar nova categoria');
+ select.hidden=false;select.required=true;document.getElementById('categoria-nova').required=false;const botao=document.getElementById('categoria-alternar');botao.textContent='+';botao.setAttribute('aria-label','Criar nova categoria');
 }
 document.getElementById('categoria-alternar').addEventListener('click',()=>{
  const select=formEntry.elements.categoria,input=document.getElementById('categoria-nova'),novo=input.hidden;
- input.hidden=!novo;select.hidden=novo;
+ input.hidden=!novo;select.hidden=novo;select.required=!novo;input.required=novo;
  if(novo){input.value='';input.focus()}else input.value='';
  const b=document.getElementById('categoria-alternar');b.textContent=novo?'↩':'+';b.setAttribute('aria-label',novo?'Selecionar categoria existente':'Criar nova categoria');
 });
