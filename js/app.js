@@ -81,7 +81,7 @@ function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document
  for(const chave of ['entradas','saidas','credito','investimentos'])document.getElementById(chave).textContent=moeda(resumo[chave]);
  const historico=filtrarPendentes(filtrados,'');document.getElementById('contagem').textContent=`${historico.length} ${historico.length===1?'registro':'registros'}`;
  historicoResumo=historico;paginaHistorico=1;renderizarHistoricoResumo();
- renderizarGrafico(filtrados);renderizarFluxoMensal(dados.filter(m=>opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria'))&&filtrarExtras(m,'')),anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
+ renderizarGrafico(filtrados);renderizarBarrasResumo(filtrados);renderizarFluxoMensal(dados.filter(m=>opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria'))&&filtrarExtras(m,'')),anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
 async function carregarPainel(usuario){document.getElementById('user-email').textContent=usuario.email||'';document.getElementById('credit-user-email').textContent=usuario.email||'';document.getElementById('invest-user-email').textContent=usuario.email||'';dados=await buscarMovimentacoes(cliente);await carregarPagamentos();await carregarFontes();await atualizarBackupMfa();configurarAnos();atualizar();mostrarPainel()}
 // A sessão criada pelo link de recuperação não deve abrir o painel nem iniciar o MFA.
 let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
