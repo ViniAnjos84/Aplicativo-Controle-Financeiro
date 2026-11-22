@@ -313,3 +313,8 @@
 .resumo-gasto-detalhe{margin:8px 0 0;color:#b9c4d4;font-size:12px;min-height:18px}
 .resumo-gasto-barra{cursor:pointer;outline:none}
 .resumo-gasto-barra:hover,.resumo-gasto-barra.selecionada,.resumo-gasto-barra:focus{fill:#ff9ca8;stroke:#f3e5e8;stroke-width:1.5}
+
+.resumo-gastos-interacao{position:relative;min-width:0}
+.resumo-gasto-popup{position:absolute;z-index:8;transform:translateX(-50%);pointer-events:none;white-space:nowrap;background:#26334b;color:#fff;border:1px solid #60718b;border-radius:8px;box-shadow:0 8px 22px #0008;padding:8px 11px;font-size:12px;font-weight:650}
+.resumo-gasto-popup[hidden]{display:none!important}
+.resumo-gasto-barra{touch-action:pan-x}
