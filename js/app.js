@@ -56,17 +56,17 @@ function configurarCategorias(){
   montarMultiFiltro(id);
  }
 }
-const HISTORICO_POR_PAGINA=20;
+let historicoPorPagina=20;
 let historicoResumo=[],paginaHistorico=1;
 function renderizarHistoricoResumo(){
  const aberto=document.getElementById('historico-toggle').getAttribute('aria-expanded')==='true';
  const corpo=document.getElementById('movimentacoes'),mais=document.getElementById('historico-mais');
  if(!aberto){corpo.replaceChildren();mais.hidden=true;return}
- const visiveis=historicoResumo.slice(0,paginaHistorico*HISTORICO_POR_PAGINA);
+ const visiveis=historicoResumo.slice(0,paginaHistorico*historicoPorPagina);
  corpo.innerHTML=visiveis.length?visiveis.map(m=>{const tipo=normalizar(m.tipo_movimentacao)==='entrada'?'entrada':'saida';return `<tr><td data-label="Descrição">${escapar(m.descricao||"Sem descrição")} ${avisoRegistro(m)}</td><td data-label="Categoria">${escapar(m.categoria)}</td><td data-label="Pagamento">${escapar(m.forma_pagamento||'—')}</td><td data-label="Fonte">${escapar(m.fonte_pagamento||'—')}</td><td data-label="Data">${dataBR(m.data)}</td><td data-label="Tipo"><span class="type ${tipo}">${tipo==='entrada'?'Entrada':'Saída'}</span></td><td data-label="Valor" class="right"><span class="money ${tipo}">${tipo==='entrada'?'+':'−'} ${moeda(m.valor)}</span></td><td data-label="Ações">${acoesRegistro(m)}</td></tr>`}).join(''):'<tr><td colspan="8" class="empty">Nenhuma movimentação encontrada para o período selecionado.</td></tr>';
  mais.hidden=visiveis.length>=historicoResumo.length;
  const restantes=historicoResumo.length-visiveis.length;
- mais.textContent='Carregar mais '+Math.min(HISTORICO_POR_PAGINA,restantes);
+ mais.textContent='Carregar mais '+Math.min(historicoPorPagina,restantes);
 }
 document.getElementById('historico-toggle').addEventListener('click',()=>{
  const botao=document.getElementById('historico-toggle'),aberto=botao.getAttribute('aria-expanded')!=='true';
@@ -76,6 +76,7 @@ document.getElementById('historico-toggle').addEventListener('click',()=>{
  renderizarHistoricoResumo();
 });
 document.getElementById('historico-mais').addEventListener('click',()=>{paginaHistorico++;renderizarHistoricoResumo()});
+document.getElementById('historico-quantidade').addEventListener('change',e=>{historicoPorPagina=Number(e.target.value);paginaHistorico=1;renderizarHistoricoResumo()});
 function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document.getElementById('inicio').value,document.getElementById('fim').value).filter(m=>(opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria')))&&filtrarExtras(m,'')),resumo=calcularResumo(filtrados);
  for(const chave of ['entradas','saidas','credito','investimentos'])document.getElementById(chave).textContent=moeda(resumo[chave]);
  const historico=filtrarPendentes(filtrados,'');document.getElementById('contagem').textContent=`${historico.length} ${historico.length===1?'registro':'registros'}`;
