@@ -74,6 +74,7 @@ function desenharGastosResumo(datas,valores,diario){
  return '<rect class="resumo-gasto-barra" data-dia="'+k+'" data-valor="'+v+'" tabindex="0" role="button" aria-label="'+k+': '+moeda(v)+'" x="'+x+'" y="'+y(v)+'" width="'+largura+'" height="'+Math.max(0,altura)+'" rx="3" fill="#ff7384"></rect><text x="'+(x+largura/2)+'" y="'+(H-13)+'" text-anchor="middle" fill="#aeb9c9" font-size="11">'+rotulo+'</text>'}).join('');
  host.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gastos por período">'+linhas+barras+'</svg>';
  ocultarPopupGastoResumo();
+ barraGastoToque=null;
 }
 
 const areaGastosResumo=document.getElementById('resumo-gastos-barras');
@@ -97,16 +98,41 @@ function alternarBarraGastoResumo(barra){
  areaGastosResumo.querySelectorAll('.resumo-gasto-barra').forEach(b=>b.classList.remove('selecionada'));
  if(!selecionada)barra.classList.add('selecionada');
 }
-areaGastosResumo.addEventListener('pointerdown',e=>{
+let barraGastoToque=null;
+areaGastosResumo.addEventListener('pointerover',e=>{
+ if(e.pointerType!=='mouse')return;
  const barra=e.target.closest('.resumo-gasto-barra');
  if(barra)mostrarPopupGastoResumo(barra);
 });
-for(const evento of ['pointerup','pointercancel','pointerleave','scroll'])areaGastosResumo.addEventListener(evento,ocultarPopupGastoResumo);
-areaGastosResumo.addEventListener('click',e=>alternarBarraGastoResumo(e.target.closest('.resumo-gasto-barra')));
+areaGastosResumo.addEventListener('pointerout',e=>{
+ if(e.pointerType!=='mouse')return;
+ const barra=e.target.closest('.resumo-gasto-barra');
+ if(barra&&!barra.contains(e.relatedTarget))ocultarPopupGastoResumo();
+});
+areaGastosResumo.addEventListener('click',e=>{
+ const barra=e.target.closest('.resumo-gasto-barra');
+ if(!barra)return;
+ if(e.detail===0)return; // teclado tratado separadamente
+ if(window.matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+ if(barraGastoToque===barra){
+  barraGastoToque=null;ocultarPopupGastoResumo();
+  barra.classList.remove('selecionada');
+ }else{
+  areaGastosResumo.querySelectorAll('.resumo-gasto-barra').forEach(b=>b.classList.remove('selecionada'));
+  barra.classList.add('selecionada');
+  barraGastoToque=barra;
+  mostrarPopupGastoResumo(barra);
+ }
+});
 areaGastosResumo.addEventListener('keydown',e=>{
  if(e.key!=='Enter'&&e.key!==' ')return;
  const barra=e.target.closest('.resumo-gasto-barra');if(!barra)return;
- e.preventDefault();alternarBarraGastoResumo(barra);mostrarPopupGastoResumo(barra);
+ e.preventDefault();
+ if(barra.classList.contains('selecionada')){
+  barra.classList.remove('selecionada');ocultarPopupGastoResumo();
+ }else{
+  areaGastosResumo.querySelectorAll('.resumo-gasto-barra').forEach(b=>b.classList.remove('selecionada'));
+  barra.classList.add('selecionada');mostrarPopupGastoResumo(barra);
+ }
 });
-areaGastosResumo.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')ocultarPopupGastoResumo()});
-areaGastosResumo.addEventListener('focusout',ocultarPopupGastoResumo);
+areaGastosResumo.addEventListener('scroll',()=>{ocultarPopupGastoResumo();barraGastoToque=null});
