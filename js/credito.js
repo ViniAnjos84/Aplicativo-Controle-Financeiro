@@ -10,7 +10,8 @@ function renderizarEvolucaoCredito(registros){
  const {diario,datas}=pontosPeriodo(document.getElementById('credito-inicio').value,document.getElementById('credito-fim').value,creditoAno.value);
  document.getElementById('c-grafico-tag').textContent=diario?'Diário':'Mensal';
  document.getElementById('c-evolucao-sub').textContent=diario?'Compras por dia no período':'Compras por mês no período';
- graficoBarrasTemporal('c-evolucao',datas,[{nome:'Compras no crédito',cor:'#8489ff',valores:serieTemporal(registros,datas,diario)}],diario);
+ const periodo=limitarDatasGrafico(datas,diario);
+ desenharGraficoInterativo('c-evolucao',periodo,[{nome:'Compras no crédito',cor:'#8489ff',valores:serieTemporal(registros,periodo,diario)}],diario);
 }
 creditoAno.addEventListener('change',()=>{ajustarAno('credito-');atualizarCredito(dados)});for(const id of ['inicio','fim'])document.getElementById('credito-'+id).addEventListener('change',()=>{sincronizarAno('credito-',id);atualizarCredito(dados)});
 creditoCategoria.addEventListener('change',()=>atualizarCredito(dados));
