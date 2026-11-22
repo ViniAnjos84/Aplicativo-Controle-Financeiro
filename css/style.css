@@ -309,3 +309,7 @@
 .zoom-chart-controls span{font-size:12px;color:#b9c4d4;min-width:45px;text-align:center}
 @media(min-width:701px){.layout{min-width:0}.main{min-width:0;max-width:calc(100vw - 245px)}}
 @media(max-width:700px){.zoom-chart-scroll svg,.evolution-chart.zoom-chart-scroll svg{height:auto;min-height:0}}
+
+.resumo-gasto-detalhe{margin:8px 0 0;color:#b9c4d4;font-size:12px;min-height:18px}
+.resumo-gasto-barra{cursor:pointer;outline:none}
+.resumo-gasto-barra:hover,.resumo-gasto-barra.selecionada,.resumo-gasto-barra:focus{fill:#ff9ca8;stroke:#f3e5e8;stroke-width:1.5}
