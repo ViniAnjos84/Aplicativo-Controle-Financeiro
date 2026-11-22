@@ -49,10 +49,10 @@ function aplicarZoomGastosResumo(){
  el.scrollLeft=Math.min(el.scrollLeft,Math.max(0,el.scrollWidth-el.clientWidth));
  document.getElementById('resumo-zoom-valor').textContent=Math.round(zoomGastosResumo*100)+'%';
  document.getElementById('resumo-zoom-menos').disabled=zoomGastosResumo<=1;
- document.getElementById('resumo-zoom-mais').disabled=zoomGastosResumo>=3;
+ document.getElementById('resumo-zoom-mais').disabled=zoomGastosResumo>=2.5;
 }
 function mudarZoomGastosResumo(novo){
- zoomGastosResumo=Math.min(3,Math.max(1,Math.round(novo*4)/4));
+ zoomGastosResumo=Math.min(2.5,Math.max(1,Math.round(novo*4)/4));
  aplicarZoomGastosResumo();
 }
 document.getElementById('resumo-zoom-menos').addEventListener('click',()=>mudarZoomGastosResumo(zoomGastosResumo-.25));
@@ -71,16 +71,42 @@ function desenharGastosResumo(datas,valores,diario){
  const largura=Math.min(30,passo*.72);
  const barras=datas.map((k,j)=>{const v=valores[j],x=L+(j+.5)*passo-largura/2,altura=v/teto*ih;
  const rotulo=diario?k.slice(8):k.slice(5)+'/'+k.slice(2,4);
- return '<rect class="resumo-gasto-barra" data-dia="'+k+'" data-valor="'+v+'" tabindex="0" role="button" aria-label="'+k+': '+moeda(v)+'" x="'+x+'" y="'+y(v)+'" width="'+largura+'" height="'+Math.max(0,altura)+'" rx="3" fill="#ff7384"><title>'+k+': '+moeda(v)+'</title></rect><text x="'+(x+largura/2)+'" y="'+(H-13)+'" text-anchor="middle" fill="#aeb9c9" font-size="11">'+rotulo+'</text>'}).join('');
+ return '<rect class="resumo-gasto-barra" data-dia="'+k+'" data-valor="'+v+'" tabindex="0" role="button" aria-label="'+k+': '+moeda(v)+'" x="'+x+'" y="'+y(v)+'" width="'+largura+'" height="'+Math.max(0,altura)+'" rx="3" fill="#ff7384"></rect><text x="'+(x+largura/2)+'" y="'+(H-13)+'" text-anchor="middle" fill="#aeb9c9" font-size="11">'+rotulo+'</text>'}).join('');
  host.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gastos por período">'+linhas+barras+'</svg>';
- document.getElementById('resumo-gasto-detalhe').textContent='Toque ou clique em uma barra para ver o valor exato.';
+ ocultarPopupGastoResumo();
 }
-function mostrarDetalheGastoResumo(barra){
+
+const areaGastosResumo=document.getElementById('resumo-gastos-barras');
+const popupGastosResumo=document.getElementById('resumo-gasto-popup');
+function ocultarPopupGastoResumo(){popupGastosResumo.hidden=true}
+function mostrarPopupGastoResumo(barra){
  if(!barra)return;
  const dia=barra.dataset.dia,valor=Number(barra.dataset.valor);
  const data=dia.length===10?dataBR(dia):dia.slice(5,7)+'/'+dia.slice(0,4);
- document.getElementById('resumo-gasto-detalhe').textContent=data+' — '+moeda(valor);
- document.querySelectorAll('#resumo-gastos-barras .resumo-gasto-barra').forEach(b=>b.classList.toggle('selecionada',b===barra));
+ popupGastosResumo.textContent=data+' · '+moeda(valor);
+ popupGastosResumo.hidden=false;
+ const area=areaGastosResumo.parentElement.getBoundingClientRect(),rect=barra.getBoundingClientRect();
+ const centro=rect.left+rect.width/2-area.left;
+ const limite=Math.max(70,area.width-70);
+ popupGastosResumo.style.left=Math.min(limite,Math.max(70,centro))+'px';
+ popupGastosResumo.style.top=Math.max(2,rect.top-area.top-42)+'px';
 }
-document.getElementById('resumo-gastos-barras').addEventListener('click',e=>mostrarDetalheGastoResumo(e.target.closest('.resumo-gasto-barra')));
-document.getElementById('resumo-gastos-barras').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const barra=e.target.closest('.resumo-gasto-barra');if(barra){e.preventDefault();mostrarDetalheGastoResumo(barra)}}});
+function alternarBarraGastoResumo(barra){
+ if(!barra)return;
+ const selecionada=barra.classList.contains('selecionada');
+ areaGastosResumo.querySelectorAll('.resumo-gasto-barra').forEach(b=>b.classList.remove('selecionada'));
+ if(!selecionada)barra.classList.add('selecionada');
+}
+areaGastosResumo.addEventListener('pointerdown',e=>{
+ const barra=e.target.closest('.resumo-gasto-barra');
+ if(barra)mostrarPopupGastoResumo(barra);
+});
+for(const evento of ['pointerup','pointercancel','pointerleave','scroll'])areaGastosResumo.addEventListener(evento,ocultarPopupGastoResumo);
+areaGastosResumo.addEventListener('click',e=>alternarBarraGastoResumo(e.target.closest('.resumo-gasto-barra')));
+areaGastosResumo.addEventListener('keydown',e=>{
+ if(e.key!=='Enter'&&e.key!==' ')return;
+ const barra=e.target.closest('.resumo-gasto-barra');if(!barra)return;
+ e.preventDefault();alternarBarraGastoResumo(barra);mostrarPopupGastoResumo(barra);
+});
+areaGastosResumo.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')ocultarPopupGastoResumo()});
+areaGastosResumo.addEventListener('focusout',ocultarPopupGastoResumo);
