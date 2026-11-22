@@ -322,3 +322,13 @@
 /* Evita seleção de texto no toque prolongado; tooltip mobile por clique. */
 .resumo-gastos-interacao,.resumo-gastos-interacao svg,.resumo-gastos-interacao svg text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .resumo-gasto-barra{-webkit-tap-highlight-color:transparent}
+
+/* Mesmo padrão de zoom e popup para todos os gráficos de barras. */
+.grafico-interativo-wrap{position:relative;min-width:0}
+.grafico-interativo-wrap [data-grafico-interativo]{width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;margin-top:16px;padding-bottom:7px;contain:layout}
+.grafico-interativo-wrap [data-grafico-interativo] svg,.evolution-chart.grafico-interativo-wrap svg{display:block;width:100%;max-width:none;height:auto;max-height:none;min-height:0}
+.grafico-interativo-popup{position:absolute;z-index:8;transform:translateX(-50%);pointer-events:none;white-space:nowrap;background:#26334b;color:#fff;border:1px solid #60718b;border-radius:8px;box-shadow:0 8px 22px #0008;padding:8px 11px;font-size:12px;font-weight:650}
+.grafico-interativo-popup[hidden]{display:none!important}
+.grafico-interativo-barra{cursor:pointer;outline:none;touch-action:pan-x;-webkit-tap-highlight-color:transparent}
+.grafico-interativo-barra:hover,.grafico-interativo-barra.selecionada,.grafico-interativo-barra:focus{filter:brightness(1.25);stroke:#f3e5e8;stroke-width:1.5}
+.grafico-interativo-wrap,.grafico-interativo-wrap svg,.grafico-interativo-wrap svg text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
