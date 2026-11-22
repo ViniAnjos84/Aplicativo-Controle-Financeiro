@@ -25,7 +25,11 @@ function serieTemporal(registros,datas,diario){const mapa=new Map();for(const m 
 function renderizarBarrasResumo(registros){
  const {diario,datas}=pontosPeriodo(document.getElementById('inicio').value,document.getElementById('fim').value,document.getElementById('ano').value);
  const saidas=registros.filter(m=>normalizar(m.tipo_movimentacao)==='saida');
- graficoBarrasTemporal('resumo-gastos-barras',datas,[{nome:'Gastos',cor:'#ff7384',valores:serieTemporal(saidas,datas,diario)}],diario);
+ const hoje=new Date(),mesAtual=String(hoje.getMonth()+1).padStart(2,'0');
+ const mesExibido=document.getElementById('inicio').value,anoExibido=Number(document.getElementById('ano').value);
+ const datasGastos=diario&&anoExibido===hoje.getFullYear()&&mesExibido===mesAtual
+  ?datas.slice(0,Math.max(10,hoje.getDate())):datas;
+ desenharGastosResumo(datasGastos,serieTemporal(saidas,datasGastos,diario),diario);
  aplicarZoomGastosResumo();
  document.getElementById('resumo-gastos-tag').textContent=diario?'Diário':'Mensal';
  const grupos=new Map();for(const m of saidas){const nome=m.forma_pagamento||'Não informado',k=normalizar(nome);if(!grupos.has(k))grupos.set(k,{nome,registros:[]});grupos.get(k).registros.push(m)}
@@ -54,3 +58,29 @@ function mudarZoomGastosResumo(novo){
 document.getElementById('resumo-zoom-menos').addEventListener('click',()=>mudarZoomGastosResumo(zoomGastosResumo-.25));
 document.getElementById('resumo-zoom-mais').addEventListener('click',()=>mudarZoomGastosResumo(zoomGastosResumo+.25));
 document.getElementById('resumo-zoom-reset').addEventListener('click',()=>{mudarZoomGastosResumo(1);document.getElementById('resumo-gastos-barras').scrollLeft=0});
+
+/* Gráfico principal: escala arredondada e consulta por toque/clique. */
+function desenharGastosResumo(datas,valores,diario){
+ const host=document.getElementById('resumo-gastos-barras'),W=760,H=260,L=72,R=18,T=18,B=44;
+ const iw=W-L-R,ih=H-T-B,passo=iw/Math.max(1,datas.length);
+ const max=Math.max(0,...valores),ordem=Math.pow(10,Math.floor(Math.log10(Math.max(1,max/4))));
+ const candidatos=[1,2,2.5,5,10].map(n=>n*ordem);
+ const intervalo=candidatos.find(n=>n>=max/4)||10*ordem;
+ const teto=Math.max(intervalo,Math.ceil(max/intervalo)*intervalo),y=v=>T+ih-v/teto*ih;
+ const linhas=Array.from({length:Math.round(teto/intervalo)+1},(_,j)=>{const v=j*intervalo;return '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#303b4c" stroke-dasharray="3 5"/><text x="'+(L-9)+'" y="'+(y(v)+4)+'" text-anchor="end" fill="#aeb9c9" font-size="12">'+v.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</text>'}).join('');
+ const largura=Math.min(30,passo*.72);
+ const barras=datas.map((k,j)=>{const v=valores[j],x=L+(j+.5)*passo-largura/2,altura=v/teto*ih;
+ const rotulo=diario?k.slice(8):k.slice(5)+'/'+k.slice(2,4);
+ return '<rect class="resumo-gasto-barra" data-dia="'+k+'" data-valor="'+v+'" tabindex="0" role="button" aria-label="'+k+': '+moeda(v)+'" x="'+x+'" y="'+y(v)+'" width="'+largura+'" height="'+Math.max(0,altura)+'" rx="3" fill="#ff7384"><title>'+k+': '+moeda(v)+'</title></rect><text x="'+(x+largura/2)+'" y="'+(H-13)+'" text-anchor="middle" fill="#aeb9c9" font-size="11">'+rotulo+'</text>'}).join('');
+ host.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gastos por período">'+linhas+barras+'</svg>';
+ document.getElementById('resumo-gasto-detalhe').textContent='Toque ou clique em uma barra para ver o valor exato.';
+}
+function mostrarDetalheGastoResumo(barra){
+ if(!barra)return;
+ const dia=barra.dataset.dia,valor=Number(barra.dataset.valor);
+ const data=dia.length===10?dataBR(dia):dia.slice(5,7)+'/'+dia.slice(0,4);
+ document.getElementById('resumo-gasto-detalhe').textContent=data+' — '+moeda(valor);
+ document.querySelectorAll('#resumo-gastos-barras .resumo-gasto-barra').forEach(b=>b.classList.toggle('selecionada',b===barra));
+}
+document.getElementById('resumo-gastos-barras').addEventListener('click',e=>mostrarDetalheGastoResumo(e.target.closest('.resumo-gasto-barra')));
+document.getElementById('resumo-gastos-barras').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const barra=e.target.closest('.resumo-gasto-barra');if(barra){e.preventDefault();mostrarDetalheGastoResumo(barra)}}});
