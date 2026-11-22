@@ -290,3 +290,11 @@
 .history-page-size{display:flex;align-items:center;gap:9px;color:#aeb9c9;font-size:12px}
 .history-page-size select{background:#101721;color:#f4f5fb;border:1px solid #354052;border-radius:8px;padding:8px 12px;font:inherit;color-scheme:dark}
 @media(max-width:650px){.history-footer{justify-content:center}.history-page-size{width:100%;justify-content:center}}
+
+.time-chart-scroll{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;margin-top:18px;padding-bottom:7px}
+.time-chart-scroll svg,.evolution-chart.time-chart-scroll svg{display:block;width:auto;max-width:none;height:260px;max-height:none;min-height:0}
+.payment-time-section{margin-top:25px;padding-top:22px;border-top:1px solid var(--line)}
+.time-chart-legend{display:flex;flex-wrap:wrap;gap:9px 17px;margin-top:15px}
+.time-legend-item{display:inline-flex;align-items:center;gap:7px;color:#b9c4d4;font-size:12px}
+.time-legend-item i{width:10px;height:10px;border-radius:3px;display:inline-block}
+@media(max-width:700px){.time-chart-scroll svg,.evolution-chart.time-chart-scroll svg{height:260px;min-height:0}}
