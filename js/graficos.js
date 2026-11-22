@@ -26,6 +26,7 @@ function renderizarBarrasResumo(registros){
  const {diario,datas}=pontosPeriodo(document.getElementById('inicio').value,document.getElementById('fim').value,document.getElementById('ano').value);
  const saidas=registros.filter(m=>normalizar(m.tipo_movimentacao)==='saida');
  graficoBarrasTemporal('resumo-gastos-barras',datas,[{nome:'Gastos',cor:'#ff7384',valores:serieTemporal(saidas,datas,diario)}],diario);
+ aplicarZoomGastosResumo();
  document.getElementById('resumo-gastos-tag').textContent=diario?'Diário':'Mensal';
  const grupos=new Map();for(const m of saidas){const nome=m.forma_pagamento||'Não informado',k=normalizar(nome);if(!grupos.has(k))grupos.set(k,{nome,registros:[]});grupos.get(k).registros.push(m)}
  const cores=['#8489ff','#48d7ad','#ffb45d','#ff8195','#7bc2ff','#c69eff','#d5cf76'];
@@ -34,3 +35,22 @@ function renderizarBarrasResumo(registros){
  document.getElementById('resumo-pagamentos-tag').textContent=diario?'Diário':'Mensal';
  document.getElementById('resumo-pagamentos-legenda').innerHTML=series.map(serie=>'<span class="time-legend-item"><i style="background:'+serie.cor+'"></i>'+escapar(serie.nome)+'</span>').join('');
 }
+
+/* Zoom vetorial integral, exclusivo do gráfico de gastos do Resumo. */
+let zoomGastosResumo=1;
+function aplicarZoomGastosResumo(){
+ const el=document.getElementById('resumo-gastos-barras'),svg=el.querySelector('svg');if(!svg)return;
+ svg.style.width=(zoomGastosResumo*100)+'%';
+ svg.style.height='auto';
+ el.scrollLeft=Math.min(el.scrollLeft,Math.max(0,el.scrollWidth-el.clientWidth));
+ document.getElementById('resumo-zoom-valor').textContent=Math.round(zoomGastosResumo*100)+'%';
+ document.getElementById('resumo-zoom-menos').disabled=zoomGastosResumo<=1;
+ document.getElementById('resumo-zoom-mais').disabled=zoomGastosResumo>=3;
+}
+function mudarZoomGastosResumo(novo){
+ zoomGastosResumo=Math.min(3,Math.max(1,Math.round(novo*4)/4));
+ aplicarZoomGastosResumo();
+}
+document.getElementById('resumo-zoom-menos').addEventListener('click',()=>mudarZoomGastosResumo(zoomGastosResumo-.25));
+document.getElementById('resumo-zoom-mais').addEventListener('click',()=>mudarZoomGastosResumo(zoomGastosResumo+.25));
+document.getElementById('resumo-zoom-reset').addEventListener('click',()=>{mudarZoomGastosResumo(1);document.getElementById('resumo-gastos-barras').scrollLeft=0});
