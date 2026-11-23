@@ -332,3 +332,14 @@
 .grafico-interativo-barra{cursor:pointer;outline:none;touch-action:pan-x;-webkit-tap-highlight-color:transparent}
 .grafico-interativo-barra:hover,.grafico-interativo-barra.selecionada,.grafico-interativo-barra:focus{filter:brightness(1.25);stroke:#f3e5e8;stroke-width:1.5}
 .grafico-interativo-wrap,.grafico-interativo-wrap svg,.grafico-interativo-wrap svg text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* Atalho flutuante para futuros registros por voz. */
+.audio-fab-container{position:fixed;right:24px;bottom:24px;z-index:110;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.audio-fab{width:62px;height:62px;display:grid;place-items:center;border:0;border-radius:50%;background:#2979f2;color:#fff;box-shadow:0 8px 28px #0007,0 4px 16px #2979f255;opacity:1;cursor:not-allowed}
+.audio-fab:disabled{opacity:1}
+.audio-fab svg{width:29px;height:29px}
+.audio-fab-tip{position:relative;background:#f5f8ff;color:#182844;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:700;box-shadow:0 8px 24px #0006;white-space:nowrap;animation:audio-tip-in .3s ease-out}
+.audio-fab-tip::after{content:"";position:absolute;right:23px;bottom:-7px;width:14px;height:14px;background:#f5f8ff;transform:rotate(45deg)}
+.audio-fab-tip[hidden]{display:none!important}
+@keyframes audio-tip-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:700px){.audio-fab-container{right:17px;bottom:calc(17px + env(safe-area-inset-bottom,0px))}.audio-fab{width:58px;height:58px}.audio-fab-tip{font-size:12px}}
