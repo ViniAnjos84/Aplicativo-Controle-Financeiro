@@ -188,11 +188,9 @@ document.getElementById('logout-button').addEventListener('click',async()=>{if(c
 anoEl.addEventListener('change',()=>{ajustarAno('');atualizar()});for(const id of ['inicio','fim'])document.getElementById(id).addEventListener('change',()=>{sincronizarAno('',id);atualizar()});categoriaEl.addEventListener('change',atualizar);
 iniciar();
 
-function navegar(pagina){if(!['resumo','credito','investimentos','configuracoes'].includes(pagina))pagina='resumo';if(pagina!=='configuracoes'){for(const id of ['fonte-feedback','pagamento-feedback']){const aviso=document.getElementById(id);if(aviso){aviso.textContent='';aviso.style.color='';}}}document.querySelectorAll('[data-view]').forEach(el=>{el.hidden=el.dataset.view!==pagina});document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===pagina));if(pagina==='credito')atualizarCredito(dados);if(pagina==='investimentos')atualizarInvestimentos(dados);window.scrollTo(0,0)}
+function navegar(pagina){if(!['resumo','credito','investimentos','configuracoes','planos'].includes(pagina))pagina='resumo';if(pagina!=='configuracoes'){for(const id of ['fonte-feedback','pagamento-feedback']){const aviso=document.getElementById(id);if(aviso){aviso.textContent='';aviso.style.color='';}}}document.querySelectorAll('[data-view]').forEach(el=>{el.hidden=el.dataset.view!==pagina});document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===pagina));if(pagina==='credito')atualizarCredito(dados);if(pagina==='investimentos')atualizarInvestimentos(dados);window.scrollTo(0,0)}
 document.querySelectorAll('[data-page]').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();const pagina=link.dataset.page;navegar(pagina);history.replaceState(null,'','#'+pagina)}));
 document.querySelectorAll('[data-mobile-settings]').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();navegar('configuracoes');history.replaceState(null,'','#configuracoes')}));
-document.querySelector('.credit-logout').addEventListener('click',()=>document.getElementById('logout-button').click());
-document.querySelector('.invest-logout').addEventListener('click',()=>document.getElementById('logout-button').click());
 window.addEventListener('hashchange',()=>navegar(location.hash.slice(1)));
 navegar(location.hash.slice(1));
 document.querySelector('[data-go-settings]').addEventListener('click', e => { e.preventDefault(); modal.close(); navegar('configuracoes'); history.replaceState(null,'','#configuracoes'); });
