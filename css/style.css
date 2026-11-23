@@ -360,7 +360,7 @@
 .plano-topo{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;gap:5px;background:linear-gradient(135deg,#477df5,#7356d9);border:1px solid #8d91ff;color:#fff;text-decoration:none;font-size:12px;font-weight:800;border-radius:10px;padding:10px 14px;box-shadow:0 4px 15px #5068e333}
 .plano-topo:hover,.plano-topo:focus-visible{filter:brightness(1.15)}
 .plano-topo.active{outline:2px solid #b3c9ff;outline-offset:2px}
-.settings-logout-panel{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:25px}
+.settings-logout-panel{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:25px;max-width:780px}
 .settings-logout-panel h2{margin:0;font-size:17px}.settings-logout-panel p{font-size:12px;margin-top:4px}
 .settings-logout-panel .logout-button{flex-shrink:0;border-color:#80505a;color:#ffb7c0}
 .planos-intro{background:linear-gradient(120deg,#1c3153,#222247);border:1px solid #41598a;border-radius:15px;padding:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
