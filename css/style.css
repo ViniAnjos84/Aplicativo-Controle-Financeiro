@@ -201,6 +201,8 @@
 .mfa-secret{display:block;overflow-wrap:anywhere;text-align:center;padding:11px;background:#101721;border:1px solid #354052;border-radius:8px;color:#e3e5ff;font-size:12px;user-select:all}
 #mfa-code{text-align:center;letter-spacing:.32em;font-size:20px;font-variant-numeric:tabular-nums}
 .mfa-cancel{display:block;margin:14px auto 0;background:transparent;border:0;color:#b9c4d5;cursor:pointer;text-decoration:underline;font:inherit;font-size:13px}
-.login-card #recover-message.success,.login-card #reset-message.success{color:#65dfb2}
 .login-screen[hidden],.login-screen [hidden]{display:none!important}
 .login-card select{width:100%;padding:10px;margin:8px 0;color:inherit;background:#151c28;border:1px solid #354052;border-radius:8px}
+
+.password-field{position:relative;width:100%}.login-card .password-field input{width:100%;padding-right:48px;box-sizing:border-box}.login-card .password-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;margin:0;padding:0;background:transparent;border:0;color:#aab6c8;cursor:pointer;box-shadow:none}.login-card .password-eye:hover{background:transparent;color:#fff}
+.auth-back{display:block;margin:14px auto 0;background:transparent;border:0;color:#b9c4d5;cursor:pointer;text-decoration:underline;font:inherit;font-size:13px}
