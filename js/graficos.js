@@ -1,18 +1,21 @@
 function renderizarGrafico(dados){const grupos=agruparCategorias(dados),total=grupos.reduce((s,[,v])=>s+v,0),cores=['#8489ff','#48d7ad','#ffb45d','#ff8195','#7bc2ff','#c69eff','#d5cf76'];document.getElementById('total-gastos').textContent=moeda(total);let pos=0;const faixas=grupos.map(([,v],i)=>{const ini=pos;pos+=v/total*100;return `${cores[i%cores.length]} ${ini}% ${pos}%`});document.getElementById('donut').style.background=faixas.length?`conic-gradient(${faixas.join(',')})`:'#303b4c';document.getElementById('legenda').innerHTML=grupos.length?grupos.map(([nome,valor],i)=>`<div class="legend-item"><span class="legend-swatch" style="background:${cores[i%cores.length]}"></span><span class="legend-name">${escapar(nome)}</span><span class="legend-value">${moeda(valor)}</span><span class="legend-pct">${Math.round(valor/total*100)}%</span></div>`).join(''):'<span style="color:var(--muted)">Nenhuma saída neste período.</span>'}
 
-function renderizarFluxoMensal(registros,anoSelecionado,inicio,fim){
- const ano=Number(anoSelecionado),agora=new Date(),ultimo=ano===agora.getFullYear()?agora.getMonth()+1:12,primeiro=Math.max(1,ultimo-4);
+function renderizarFluxoMensal(registros,anoSelecionado,fim){
+ const ano=Number(anoSelecionado),ultimo=Number(fim);
+ if(!Number.isInteger(ano)||!Number.isInteger(ultimo)||ultimo<1||ultimo>12)return;
  const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
  const datas=[],entradas=[],saidas=[];
- for(let mes=primeiro;mes<=ultimo;mes++){
-  const chave=ano+'-'+String(mes).padStart(2,'0');
-  const itens=mes>=Number(inicio)&&mes<=Number(fim)?registros.filter(r=>r.data?.slice(0,7)===chave):[];
+ for(let deslocamento=4;deslocamento>=0;deslocamento--){
+  const data=new Date(ano,ultimo-1-deslocamento,1);
+  const chave=data.getFullYear()+'-'+String(data.getMonth()+1).padStart(2,'0');
+  const itens=registros.filter(r=>r.data?.slice(0,7)===chave);
   datas.push(chave);
   entradas.push(itens.filter(r=>normalizar(r.tipo_movimentacao)==='entrada').reduce((v,r)=>v+Number(r.valor||0),0));
   saidas.push(itens.filter(r=>normalizar(r.tipo_movimentacao)==='saida'&&normalizar(r.forma_pagamento)!=='credito').reduce((v,r)=>v+Number(r.valor||0),0));
  }
- desenharGraficoInterativo('fluxo-grafico',datas,[{nome:'Entradas',cor:'#45d6a1',valores:entradas},{nome:'Saídas',cor:'#ff7384',valores:saidas}],false,meses);
- document.getElementById('fluxo-subtitulo').textContent='Comparativo de '+meses[primeiro-1]+' a '+meses[ultimo-1]+' de '+ano+' · conforme filtros selecionados';
+ const rotulo=chave=>meses[Number(chave.slice(5,7))-1]+'/'+chave.slice(0,4);
+ desenharGraficoInterativo('fluxo-grafico',datas,[{nome:'Entradas',cor:'#45d6a1',valores:entradas},{nome:'Saídas',cor:'#ff7384',valores:saidas}],false);
+ document.getElementById('fluxo-subtitulo').textContent='Comparativo de '+rotulo(datas[0])+' a '+rotulo(datas[4])+' · conforme filtros selecionados';
 }
 
 function graficoBarrasTemporal(id,datas,series,diario){
