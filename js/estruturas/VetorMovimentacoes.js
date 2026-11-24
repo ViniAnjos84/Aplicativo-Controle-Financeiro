@@ -1,18 +1,22 @@
 class VetorMovimentacoes {
+    // Inicializa o vetor vazio.
     constructor() {
         this.elementos = [];
         this.quantidade = 0;
     }
 
+    // Insere uma movimentação no final.
     adicionar(movimentacao) {
         this.elementos[this.quantidade] = movimentacao;
         this.quantidade++;
     }
 
+    // Retorna a quantidade de elementos.
     tamanho() {
         return this.quantidade;
     }
 
+    // Acessa um elemento pelo índice.
     buscarPorIndice(indice) {
         if (!Number.isInteger(indice) ||
             indice < 0 || indice >= this.quantidade) {
@@ -22,6 +26,7 @@ class VetorMovimentacoes {
         return this.elementos[indice];
     }
 
+    // Busca uma movimentação pelo ID.
     buscarPorId(id) {
         for (let i = 0; i < this.quantidade; i++) {
             if (String(this.elementos[i].id) === String(id)) {
@@ -32,6 +37,7 @@ class VetorMovimentacoes {
         return null;
     }
 
+    // Atualiza os campos sem alterar o ID.
     atualizar(id, movimentacao) {
         for (let i = 0; i < this.quantidade; i++) {
             if (String(this.elementos[i].id) === String(id)) {
@@ -48,6 +54,7 @@ class VetorMovimentacoes {
         return false;
     }
 
+    // Remove pelo ID e desloca os elementos seguintes.
     remover(id) {
         for (let i = 0; i < this.quantidade; i++) {
             if (String(this.elementos[i].id) === String(id)) {
@@ -65,6 +72,7 @@ class VetorMovimentacoes {
         return false;
     }
 
+    // Cria um vetor com os elementos que atendem à condição.
     filtrar(condicao) {
         const resultado = new VetorMovimentacoes();
 
@@ -77,11 +85,13 @@ class VetorMovimentacoes {
         return resultado;
     }
 
+    // Esvazia o vetor.
     limpar() {
         this.elementos = [];
         this.quantidade = 0;
     }
 
+    // Retorna uma cópia do array de elementos.
     paraArray() {
         const resultado = [];
 
@@ -91,4 +101,9 @@ class VetorMovimentacoes {
 
         return resultado;
     }
+}
+
+// Permite importar a classe no Node.js sem afetar o navegador.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = VetorMovimentacoes;
 }
