@@ -1,10 +1,16 @@
 const VetorMovimentacoes = require('../js/estruturas/VetorMovimentacoes.js');
 const vetor = new VetorMovimentacoes();
 
+// Simula o ID automático do banco apenas neste teste local.
+let proximoId = 1;
+function adicionar(movimentacao) {
+    vetor.adicionar({ ...movimentacao, id: proximoId++ });
+}
+
 // Adicione ou altere as movimentações para a apresentação.
-vetor.adicionar({ id: 1, descricao: 'Salário', valor: 3000, tipo_movimentacao: 'entrada' });
-vetor.adicionar({ id: 2, descricao: 'Gasolina', valor: 200, tipo_movimentacao: 'saida' });
-vetor.adicionar({ id: 3, descricao: 'Mercado', valor: 150, tipo_movimentacao: 'saida' });
+adicionar({ descricao: 'Salário', valor: 3000, tipo_movimentacao: 'entrada' });
+adicionar({ descricao: 'Gasolina', valor: 200, tipo_movimentacao: 'saida' });
+adicionar({ descricao: 'Mercado', valor: 150, tipo_movimentacao: 'saida' });
 
 console.log('Vetor inicial:');
 console.table(vetor.paraArray());
