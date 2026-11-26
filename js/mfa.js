@@ -27,10 +27,10 @@ async function exigirMfa(usuario){
   // Sempre consultar o nível da sessão: restaurar a página não pode pular o MFA.
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
-  if(nivel.currentLevel==='aal2'){ocultarMfa();await prosseguirAposMfa(usuario);return;}
   const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
   if(erroFatores)throw erroFatores;
   const verificados=(fatores.totp||[]).filter(f=>f.status==='verified');
+  if(nivel.currentLevel==='aal2'&&verificados.length){ocultarMfa();await prosseguirAposMfa(usuario);return;}
   if(verificados.length){
     mfaPendente={modo:'challenge',factorId:verificados[0].id,usuario};
     exibirMfa('challenge');
@@ -131,10 +131,11 @@ async function atualizarBackupMfa(){
  });
  const botao=document.getElementById('backup-mfa-start');
  botao.disabled=ativos.length>=2;
- botao.textContent=ativos.length>=2?'Limite atingido':'Adicionar reserva';
+ botao.textContent=ativos.length>=2?'Limite atingido':ativos.length===0?'Cadastrar principal':'Adicionar reserva';
+ document.querySelector('.security-add-copy strong').textContent=ativos.length===0?'Autenticador principal':'Autenticador de reserva';
  document.querySelector('.security-add-copy p').textContent=ativos.length>=2
   ?'Dois autenticadores estão ativos. Você pode usar qualquer um deles para entrar.'
-  :'Cadastre um segundo aplicativo ou dispositivo para manter o acesso caso perca o principal.';
+  :ativos.length===0?'Cadastre seu primeiro autenticador para proteger a conta.':'Cadastre um segundo aplicativo ou dispositivo para manter o acesso caso perca o principal.';
 }
 async function removerAutenticador(factorId,nome,botao){
  if(backupMfaPendente){mensagemBackup('Conclua ou cancele o cadastro em andamento antes de remover um autenticador.',true);return;}
@@ -173,11 +174,17 @@ document.getElementById('backup-mfa-start').addEventListener('click',async()=>{
  try{
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
-  if(nivel.currentLevel!=='aal2')throw new Error('Entre novamente e confirme seu autenticador antes de cadastrar outro.');
   const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
   if(erroFatores)throw erroFatores;
-  if((fatores.totp||[]).filter(f=>f.status==='verified').length!==1)
-   throw new Error('O cadastro reserva exige exatamente um autenticador ativo.');
+  const ativos=(fatores.totp||[]).filter(f=>f.status==='verified');
+  if(ativos.length===0){
+   const {data:usuario,error:erroUsuario}=await cliente.auth.getUser();
+   if(erroUsuario)throw erroUsuario;
+   await exigirMfa(usuario.user);
+   return;
+  }
+  if(nivel.currentLevel!=='aal2')throw new Error('Entre novamente e confirme seu autenticador antes de cadastrar outro.');
+  if(ativos.length!==1)throw new Error('O cadastro reserva exige exatamente um autenticador ativo.');
   const {data,error}=await cliente.auth.mfa.enroll({factorType:'totp',friendlyName:'Autenticador reserva'});
   if(error)throw error;
   backupMfaPendente=data.id;
