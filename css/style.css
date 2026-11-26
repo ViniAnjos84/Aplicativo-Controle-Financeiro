@@ -376,3 +376,11 @@
 .planos-aviso{font-size:11px;color:#95a4b7;margin:17px 0 28px}
 @media(max-width:1050px){.planos-grid{grid-template-columns:1fr}.plano-card-head p{min-height:0}}
 @media(max-width:700px){.sidebar .nav-planos{display:none}.plano-topo{font-size:11px;padding:9px 11px}.planos-intro{padding:18px;align-items:flex-start;flex-direction:column}.planos-grid{gap:18px}.plano-card{padding:21px}.settings-logout-panel{align-items:stretch;flex-direction:column}.settings-logout-panel .logout-button{width:100%}}
+
+/* Estado real da verificação em duas etapas */
+.security-summary[data-mfa-state="inactive"]{border-color:#704044;background:linear-gradient(110deg,#382327,#29232c)}
+.security-summary[data-mfa-state="inactive"] .security-summary-icon,.security-summary[data-mfa-state="inactive"] .security-state{background:#542e35;color:#ffb0b5;border-color:#87505a}
+.security-summary[data-mfa-state="inactive"] .security-summary-copy span{color:#e1aeb3}
+.security-summary[data-mfa-state="unknown"]{border-color:#46536a;background:#202938}
+.security-summary[data-mfa-state="unknown"] .security-summary-icon,.security-summary[data-mfa-state="unknown"] .security-state{background:#303c50;color:#c2cddd;border-color:#52617a}
+.security-summary[data-mfa-state="unknown"] .security-summary-copy span{color:#aebbd0}
