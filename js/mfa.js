@@ -91,10 +91,22 @@ function mensagemBackup(texto,erro=false){
  const el=document.getElementById('backup-mfa-message');
  el.textContent=texto;el.style.color=erro?'var(--red)':'var(--green)';
 }
+function atualizarResumoMfa(ativo){
+ const resumo=document.querySelector('.security-summary');
+ const icone=resumo.querySelector('.security-summary-icon');
+ const estado=resumo.querySelector('.security-state');
+ const descricao=resumo.querySelector('.security-summary-copy span');
+ resumo.dataset.mfaState=ativo===null?'unknown':ativo?'active':'inactive';
+ icone.textContent=ativo===true?'✓':ativo===false?'!':'…';
+ estado.textContent=ativo===true?'Ativada':ativo===false?'Desativada':'Não verificada';
+ descricao.textContent=ativo===true?'Uma camada extra de proteção para suas movimentações.':ativo===false?'Nenhum autenticador verificado. Configure o MFA para proteger sua conta.':'Não foi possível confirmar a proteção neste momento.';
+}
 async function atualizarBackupMfa(){
+ atualizarResumoMfa(null);
  const {data,error}=await cliente.auth.mfa.listFactors();
  if(error)throw error;
  const ativos=(data.totp||[]).filter(f=>f.status==='verified');
+ atualizarResumoMfa(ativos.length>0);
  const status=document.getElementById('backup-mfa-status');
  const lista=document.getElementById('backup-mfa-list');
  const contador=document.getElementById('backup-mfa-count');
