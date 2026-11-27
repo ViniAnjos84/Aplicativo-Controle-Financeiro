@@ -197,7 +197,10 @@ document.getElementById('backup-mfa-start').addEventListener('click',async()=>{
   const pendentes=(fatores.all||[]).filter(f=>f.factor_type==='totp'&&f.status==='unverified');
   for(const fator of pendentes){const {error}=await cliente.auth.mfa.unenroll({factorId:fator.id});if(error)throw error;}
   if(geracao!==geracaoMfa)return;
-  const {data,error}=await cliente.auth.mfa.enroll({factorType:'totp',friendlyName:'Autenticador reserva'});
+  const nomesOcupados=new Set((fatores.all||ativos).filter(f=>!pendentes.some(p=>p.id===f.id)).map(f=>f.friendly_name));
+  const nome=['Autenticador reserva','Google Authenticator'].find(n=>!nomesOcupados.has(n));
+  if(!nome)throw new Error('Não há um nome de autenticador disponível. Atualize a lista de dispositivos.');
+  const {data,error}=await cliente.auth.mfa.enroll({factorType:'totp',friendlyName:nome});
   if(error)throw error;
   if(geracao!==geracaoMfa)return;
   backupMfaPendente=data.id;
