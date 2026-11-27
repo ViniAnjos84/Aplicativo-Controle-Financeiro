@@ -84,23 +84,26 @@ function atualizar(){const filtrados=filtrarIntervalo(dados,anoEl.value,document
  renderizarGrafico(filtrados);renderizarBarrasResumo(filtrados);renderizarFluxoMensal(dados.filter(m=>opcaoSelecionada('categoria',normalizar(m.categoria||'Sem categoria'))&&filtrarExtras(m,'')),anoEl.value,document.getElementById('fim').value);renderizarPagamentos(filtrados);atualizarCredito(dados);atualizarInvestimentos(dados)}
 async function carregarPainel(usuario){document.getElementById('user-email').textContent=usuario.email||'';document.getElementById('credit-user-email').textContent=usuario.email||'';document.getElementById('invest-user-email').textContent=usuario.email||'';dados=await buscarMovimentacoes(cliente);await carregarPagamentos();await carregarFontes();await atualizarBackupMfa();configurarAnos();atualizar();mostrarPainel()}
 // A sessão criada pelo link de recuperação não deve abrir o painel nem iniciar o MFA.
-let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
+const chaveRecuperacao='controle-financeiro:recuperacao';
+let recuperandoSenha=/(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href)||sessionStorage.getItem(chaveRecuperacao)==='1';
+function marcarRecuperacao(){recuperandoSenha=true;sessionStorage.setItem(chaveRecuperacao,'1');}
+function encerrarRecuperacao(){recuperandoSenha=false;sessionStorage.removeItem(chaveRecuperacao);resetMfaVerificado=false;resetMfaFator=null;limparUrlRecuperacao();}
 const recoverScreen=document.getElementById('recover-screen'),resetScreen=document.getElementById('reset-screen');
 function exibirTelaAuth(tela){loginScreen.hidden=true;dashboard.hidden=true;document.getElementById('first-password-screen').hidden=true;document.getElementById('mfa-screen').hidden=true;recoverScreen.hidden=tela!=='recover';resetScreen.hidden=tela!=='reset'}
 let resetMfaVerificado=false,resetMfaFator=null;
 async function prepararRecuperacao(){
- recuperandoSenha=true;exibirTelaAuth('reset');
+ marcarRecuperacao();exibirTelaAuth('reset');
  const formMfa=document.getElementById('reset-mfa-form'),formSenha=document.getElementById('reset-form');
  const msg=document.getElementById('reset-mfa-message');
  msg.textContent='';formSenha.hidden=true;formMfa.hidden=true;document.getElementById('reset-factor-choice').hidden=true;resetMfaVerificado=false;resetMfaFator=null;
  try{
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
-  if(nivel.currentLevel==='aal2'){resetMfaVerificado=true;formSenha.hidden=false;return}
   const {data:fatores,error:erroFatores}=await cliente.auth.mfa.listFactors();
   if(erroFatores)throw erroFatores;
   const verificados=(fatores.totp||[]).filter(f=>f.status==='verified');
   if(!verificados.length)throw new Error('Nenhum autenticador verificado encontrado. Contate o administrador para recuperar o acesso.');
+  if(nivel.currentLevel==='aal2'){resetMfaVerificado=true;formSenha.hidden=false;return}
   resetMfaFator=verificados[0].id;
   const escolha=document.getElementById('reset-factor-choice');
   const select=document.getElementById('reset-factor-select');
@@ -140,7 +143,7 @@ document.getElementById('forgot-password').addEventListener('click',()=>{
 document.getElementById('recover-back').addEventListener('click',mostrarLogin);
 document.getElementById('reset-back').addEventListener('click',async()=>{
  if(cliente)await cliente.auth.signOut();
- recuperandoSenha=false;resetMfaVerificado=false;limparUrlRecuperacao();mostrarLogin();
+ encerrarRecuperacao();mostrarLogin();
 });
 document.getElementById('recover-form').addEventListener('submit',async e=>{
  e.preventDefault();if(!cliente)return;
@@ -166,7 +169,7 @@ document.getElementById('reset-form').addEventListener('submit',async e=>{
   const {error}=await cliente.auth.updateUser({password:senha});
   if(error)throw error;
   await cliente.auth.signOut();
-  recuperandoSenha=false;limparUrlRecuperacao();mostrarLogin();
+  encerrarRecuperacao();mostrarLogin();
   aviso.textContent='Senha alterada com sucesso. Entre novamente e confirme seu Google Authenticator.';
   document.getElementById('reset-form').reset();
  }catch(err){msg.textContent=err.message||'Não foi possível atualizar a senha.'}
@@ -175,12 +178,12 @@ document.getElementById('reset-form').addEventListener('submit',async e=>{
 async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE_AQUI_SUA_CHAVE_PUBLICAVEL'){aviso.textContent='Configure a chave publicável em js/config.js.';return}
  cliente=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
  cliente.auth.onAuthStateChange((evento)=>{
-  if(evento==='PASSWORD_RECOVERY'){queueMicrotask(()=>{void prepararRecuperacao()})}
-  if(evento==='SIGNED_OUT'){limparDadosMfa();if(!recuperandoSenha)mostrarLogin()}
+  if(evento==='PASSWORD_RECOVERY'){marcarRecuperacao();queueMicrotask(()=>{void prepararRecuperacao()})}
+  if(evento==='SIGNED_OUT'){encerrarRecuperacao();limparDadosMfa();mostrarLogin()}
  });
  const {data:{session},error}=await cliente.auth.getSession();
  if(error){aviso.textContent=error.message;return}
- if(recuperandoSenha){await prepararRecuperacao();return}
+ if(recuperandoSenha){if(session?.user){await prepararRecuperacao();return}encerrarRecuperacao();mostrarLogin();return}
  if(session?.user){try{await exigirMfa(session.user)}catch(e){aviso.textContent='Não foi possível verificar a autenticação: '+e.message;mostrarLogin()}}
 }
 form.addEventListener('submit',async e=>{e.preventDefault();if(!cliente)return;aviso.textContent='';const botao=document.getElementById('login-button');botao.disabled=true;botao.textContent='Entrando...';try{const {data,error}=await cliente.auth.signInWithPassword({email:document.getElementById('login-email').value.trim(),password:document.getElementById('login-password').value});if(error)throw error;await exigirMfa(data.user)}catch(e){aviso.textContent=e.message==='Invalid login credentials'?'E-mail ou senha incorretos.':e.message}finally{botao.disabled=false;botao.textContent='Entrar'}});
