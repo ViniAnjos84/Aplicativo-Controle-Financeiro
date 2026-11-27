@@ -24,6 +24,7 @@ function exibirMfa(modo){
 }
 function ocultarMfa(){mfaScreen.hidden=true;mfaPendente=null;mfaQr.removeAttribute('src');mfaSegredo.textContent='';mfaCodigo.value='';}
 async function exigirMfa(usuario){
+  const geracao=geracaoMfa;
   // Sempre consultar o nível da sessão: restaurar a página não pode pular o MFA.
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
   if(erroNivel)throw erroNivel;
@@ -56,6 +57,7 @@ async function exigirMfa(usuario){
     factorType:'totp',friendlyName:'Google Authenticator'
   });
   if(erroCadastro)throw erroCadastro;
+  if(geracao!==geracaoMfa)return;
   mfaPendente={modo:'enroll',factorId:novo.id,usuario};
   exibirMfa('enroll');
   // SVG retornado pelo Supabase: não utilizar geradores externos de QR Code.
@@ -87,6 +89,15 @@ document.getElementById('mfa-cancel').addEventListener('click',async()=>{
 });
 
 let backupMfaPendente=null;
+let geracaoMfa=0;
+function limparCadastroReserva(){
+ backupMfaPendente=null;
+ document.getElementById('backup-mfa-enroll').hidden=true;
+ document.getElementById('backup-mfa-qr').removeAttribute('src');
+ document.getElementById('backup-mfa-secret').textContent='';
+ document.getElementById('backup-mfa-form').reset();
+}
+function limparDadosMfa(){geracaoMfa++;ocultarMfa();limparCadastroReserva();}
 function mensagemBackup(texto,erro=false){
  const el=document.getElementById('backup-mfa-message');
  el.textContent=texto;el.style.color=erro?'var(--red)':'var(--green)';
@@ -162,14 +173,11 @@ async function removerAutenticador(factorId,nome,botao){
  }catch(e){mensagemBackup(e.message||'Não foi possível remover o autenticador.',true);botao.disabled=false;}
 }
 async function cancelarBackupMfa(){
- const fator=backupMfaPendente;backupMfaPendente=null;
- document.getElementById('backup-mfa-enroll').hidden=true;
- document.getElementById('backup-mfa-qr').removeAttribute('src');
- document.getElementById('backup-mfa-secret').textContent='';
- document.getElementById('backup-mfa-form').reset();
+ const fator=backupMfaPendente;limparCadastroReserva();
  if(fator){const {error}=await cliente.auth.mfa.unenroll({factorId:fator});if(error)throw error;}
 }
 document.getElementById('backup-mfa-start').addEventListener('click',async()=>{
+ const geracao=geracaoMfa;
  const botao=document.getElementById('backup-mfa-start');botao.disabled=true;mensagemBackup('');
  try{
   const {data:nivel,error:erroNivel}=await cliente.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -185,8 +193,16 @@ document.getElementById('backup-mfa-start').addEventListener('click',async()=>{
   }
   if(nivel.currentLevel!=='aal2')throw new Error('Entre novamente e confirme seu autenticador antes de cadastrar outro.');
   if(ativos.length!==1)throw new Error('O cadastro reserva exige exatamente um autenticador ativo.');
-  const {data,error}=await cliente.auth.mfa.enroll({factorType:'totp',friendlyName:'Autenticador reserva'});
+  if(geracao!==geracaoMfa)return;
+  const pendentes=(fatores.all||[]).filter(f=>f.factor_type==='totp'&&f.status==='unverified');
+  for(const fator of pendentes){const {error}=await cliente.auth.mfa.unenroll({factorId:fator.id});if(error)throw error;}
+  if(geracao!==geracaoMfa)return;
+  const nomesOcupados=new Set((fatores.all||ativos).filter(f=>!pendentes.some(p=>p.id===f.id)).map(f=>f.friendly_name));
+  const nome=['Autenticador reserva','Google Authenticator'].find(n=>!nomesOcupados.has(n));
+  if(!nome)throw new Error('Não há um nome de autenticador disponível. Atualize a lista de dispositivos.');
+  const {data,error}=await cliente.auth.mfa.enroll({factorType:'totp',friendlyName:nome});
   if(error)throw error;
+  if(geracao!==geracaoMfa)return;
   backupMfaPendente=data.id;
   document.getElementById('backup-mfa-qr').src=data.totp.qr_code;
   document.getElementById('backup-mfa-secret').textContent=data.totp.secret;
@@ -203,11 +219,7 @@ document.getElementById('backup-mfa-form').addEventListener('submit',async e=>{
  try{
   const {error}=await cliente.auth.mfa.challengeAndVerify({factorId:backupMfaPendente,code:codigo});
   if(error)throw error;
-  backupMfaPendente=null;
-  document.getElementById('backup-mfa-enroll').hidden=true;
-  document.getElementById('backup-mfa-qr').removeAttribute('src');
-  document.getElementById('backup-mfa-secret').textContent='';
-  document.getElementById('backup-mfa-form').reset();
+  limparCadastroReserva();
   await atualizarBackupMfa();
   mensagemBackup('Autenticador de reserva ativado. Guarde-o em outro dispositivo.');
  }catch(e){mensagemBackup(e.message||'Não foi possível confirmar o código.',true);}

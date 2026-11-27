@@ -3,7 +3,7 @@ const loginScreen=document.getElementById('login-screen'), dashboard=document.ge
 const form=document.getElementById('login-form'), aviso=document.getElementById('login-error');
 const anoEl=document.getElementById('ano'),categoriaEl=document.getElementById('categoria');
 let dados=[], cliente=null;
-function mostrarLogin(){loginScreen.hidden=false;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;document.getElementById('recover-screen').hidden=true;document.getElementById('reset-screen').hidden=true;document.getElementById('first-password-screen').hidden=true;document.getElementById('login-password').value=''}
+function mostrarLogin(){limparDadosMfa();loginScreen.hidden=false;dashboard.hidden=true;document.getElementById('mfa-screen').hidden=true;document.getElementById('recover-screen').hidden=true;document.getElementById('reset-screen').hidden=true;document.getElementById('first-password-screen').hidden=true;document.getElementById('login-password').value=''}
 async function prosseguirAposMfa(usuario){
  const {data,error}=await cliente.auth.getUser();
  if(error)throw error;
@@ -176,7 +176,7 @@ async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE
  cliente=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
  cliente.auth.onAuthStateChange((evento)=>{
   if(evento==='PASSWORD_RECOVERY'){queueMicrotask(()=>{void prepararRecuperacao()})}
-  if(evento==='SIGNED_OUT'&&!recuperandoSenha){ocultarMfa();mostrarLogin()}
+  if(evento==='SIGNED_OUT'){limparDadosMfa();if(!recuperandoSenha)mostrarLogin()}
  });
  const {data:{session},error}=await cliente.auth.getSession();
  if(error){aviso.textContent=error.message;return}
@@ -184,7 +184,7 @@ async function iniciar(){if(!window.supabase || SUPABASE_PUBLISHABLE_KEY==='COLE
  if(session?.user){try{await exigirMfa(session.user)}catch(e){aviso.textContent='Não foi possível verificar a autenticação: '+e.message;mostrarLogin()}}
 }
 form.addEventListener('submit',async e=>{e.preventDefault();if(!cliente)return;aviso.textContent='';const botao=document.getElementById('login-button');botao.disabled=true;botao.textContent='Entrando...';try{const {data,error}=await cliente.auth.signInWithPassword({email:document.getElementById('login-email').value.trim(),password:document.getElementById('login-password').value});if(error)throw error;await exigirMfa(data.user)}catch(e){aviso.textContent=e.message==='Invalid login credentials'?'E-mail ou senha incorretos.':e.message}finally{botao.disabled=false;botao.textContent='Entrar'}});
-document.getElementById('logout-button').addEventListener('click',async()=>{if(cliente)await cliente.auth.signOut();dados=[];ocultarMfa();mostrarLogin()});
+document.getElementById('logout-button').addEventListener('click',async()=>{limparDadosMfa();if(cliente)await cliente.auth.signOut();dados=[];mostrarLogin()});
 anoEl.addEventListener('change',()=>{ajustarAno('');atualizar()});for(const id of ['inicio','fim'])document.getElementById(id).addEventListener('change',()=>{sincronizarAno('',id);atualizar()});categoriaEl.addEventListener('change',atualizar);
 iniciar();
 
