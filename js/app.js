@@ -212,13 +212,13 @@ function iniciarDatas(prefix){const mes=String(new Date().getMonth()+1).padStart
 function ajustarAno(prefix){const ano=Number(document.getElementById(prefix+'ano').value),hoje=new Date(),mes=ano===hoje.getFullYear()?hoje.getMonth()+1:12;document.getElementById(prefix+'inicio').value=String(mes).padStart(2,'0');document.getElementById(prefix+'fim').value=String(mes).padStart(2,'0');for(const campo of ['inicio','fim'])montarSeletorMes(prefix+campo)}
 function sincronizarAno(prefix,id){const ini=document.getElementById(prefix+'inicio'),fim=document.getElementById(prefix+'fim');if(ini.value>fim.value){if(id==='inicio')fim.value=ini.value;else ini.value=fim.value}for(const campo of ['inicio','fim'])montarSeletorMes(prefix+campo)}
 const modal=document.getElementById('entry-dialog'),formEntry=document.getElementById('entry-form');let editingId=null,deletingId=null;
-function abrirFormulario(id=null){editingId=id;formEntry.reset();document.getElementById('entry-error').textContent='';document.getElementById('entry-title').textContent=id?'Editar movimentação':'Nova movimentação';const m=dados.find(r=>String(r.id)===String(id));formEntry.elements.tipo_movimentacao.value=m?.tipo_movimentacao||'saida';for(const k of ['descricao','valor'])formEntry.elements[k].value=m?.[k]??'';configurarCategoriaFormulario(m?.categoria||'');formEntry.elements.data.value=m?.data||new Date().toLocaleDateString('en-CA');configurarPagamentosFormulario(m?.forma_pagamento||'');configurarFontesFormulario(m?.fonte_pagamento||'');modal.showModal()}
+function abrirFormulario(id=null){editingId=id;formEntry.reset();document.getElementById('entry-error').textContent='';document.getElementById('entry-title').textContent=id?'Editar movimentação':'Nova movimentação';const m=dados.find(r=>String(r.id)===String(id));formEntry.elements.namedItem('tipo_movimentacao').value=m?.tipo_movimentacao||'saida';for(const k of ['descricao','valor'])formEntry.elements.namedItem(k).value=m?.[k]??'';configurarCategoriaFormulario(m?.categoria||'');formEntry.elements.namedItem('data').value=m?.data||new Date().toLocaleDateString('en-CA');configurarPagamentosFormulario(m?.forma_pagamento||'');configurarFontesFormulario(m?.fonte_pagamento||'');modal.showModal()}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>abrirFormulario()));
 document.getElementById('entry-close').onclick=()=>modal.close();document.getElementById('entry-cancel').onclick=()=>modal.close();
 document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');if(edit)abrirFormulario(edit.dataset.edit);if(del){deletingId=del.dataset.delete;document.getElementById('delete-description').textContent=dados.find(m=>String(m.id)===String(deletingId))?.descricao||'';document.getElementById('delete-error').textContent='';document.getElementById('delete-dialog').showModal()}});
 document.getElementById('delete-cancel').onclick=()=>document.getElementById('delete-dialog').close();
 async function recarregar(){dados=await buscarMovimentacoes(cliente);configurarCategorias();configurarFiltrosExtras();atualizar();atualizarCredito(dados);atualizarInvestimentos(dados)}
-formEntry.addEventListener('submit',async e=>{e.preventDefault();const save=document.getElementById('entry-save');save.disabled=true;document.getElementById('entry-error').textContent='';try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada. Entre novamente.');const payload={};for(const k of ['tipo_movimentacao','descricao','valor','categoria','forma_pagamento','fonte_pagamento','data'])payload[k]=formEntry.elements[k].value.trim();payload.categoria=document.getElementById('categoria-nova').hidden?formEntry.elements.categoria.value.trim():document.getElementById('categoria-nova').value.trim();if(!payload.categoria||payload.categoria.length>100)throw new Error('Informe uma categoria com até 100 caracteres.');payload.fonte_pagamento=payload.fonte_pagamento||null;payload.valor=Number(payload.valor);if(!Number.isFinite(payload.valor)||payload.valor<0)throw new Error('Valor inválido.');let query;if(editingId){query=cliente.from('movimentacoes').update(payload).eq('id',editingId).eq('user_id',user.id).select('id')}else{query=cliente.from('movimentacoes').insert({...payload,user_id:user.id}).select('id')}const {data:salvos,error}=await query;if(error)throw error;if(!salvos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();modal.close()}catch(err){document.getElementById('entry-error').textContent=err.message}finally{save.disabled=false}});
+formEntry.addEventListener('submit',async e=>{e.preventDefault();const save=document.getElementById('entry-save');save.disabled=true;document.getElementById('entry-error').textContent='';try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada. Entre novamente.');const payload={};for(const k of ['tipo_movimentacao','descricao','valor','categoria','forma_pagamento','fonte_pagamento','data'])payload[k]=formEntry.elements.namedItem(k).value.trim();payload.categoria=document.getElementById('categoria-nova').hidden?formEntry.elements.namedItem('categoria').value.trim():document.getElementById('categoria-nova').value.trim();if(!payload.categoria||payload.categoria.length>100)throw new Error('Informe uma categoria com até 100 caracteres.');payload.fonte_pagamento=payload.fonte_pagamento||null;payload.valor=Number(payload.valor);if(!Number.isFinite(payload.valor)||payload.valor<0)throw new Error('Valor inválido.');let query;if(editingId){query=cliente.from('movimentacoes').update(payload).eq('id',editingId).eq('user_id',user.id).select('id')}else{query=cliente.from('movimentacoes').insert({...payload,user_id:user.id}).select('id')}const {data:salvos,error}=await query;if(error)throw error;if(!salvos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();modal.close()}catch(err){document.getElementById('entry-error').textContent=err.message}finally{save.disabled=false}});
 document.getElementById('delete-confirm').onclick=async()=>{const b=document.getElementById('delete-confirm');b.disabled=true;try{const {data:{user},error:authError}=await cliente.auth.getUser();if(authError||!user)throw new Error('Sessão expirada.');const {data:removidos,error}=await cliente.from('movimentacoes').delete().eq('id',deletingId).eq('user_id',user.id).select('id');if(error)throw error;if(!removidos?.length)throw new Error('Registro não encontrado ou sem permissão.');await recarregar();document.getElementById('delete-dialog').close()}catch(e){document.getElementById('delete-error').textContent=e.message}finally{b.disabled=false}};
 
 function configurarFiltrosExtras(){
@@ -246,7 +246,7 @@ function filtrarExtras(m,prefix){
 for(const prefix of ['','credito-','invest-']){const controls=document.getElementById(prefix+'filter-controls'),botao=document.querySelector('[aria-controls="'+controls.id+'"]');botao.addEventListener('click',()=>{const aberto=botao.getAttribute('aria-expanded')==='true';botao.setAttribute('aria-expanded',String(!aberto));botao.setAttribute('aria-label',aberto?'Mostrar filtros':'Ocultar filtros');botao.title=aberto?'Mostrar filtros':'Ocultar filtros';controls.hidden=aberto});for(const campo of ['tipo','pagamento','fonte'])montarMultiFiltro(prefix+campo)}
 
 function configurarCategoriaFormulario(atual=''){
- const select=formEntry.elements.categoria,nomes=new Map();
+ const select=formEntry.elements.namedItem('categoria'),nomes=new Map();
  for(const m of dados){const v=(m.categoria||'').trim();if(v)nomes.set(normalizar(v),v)}
  if(atual&&!nomes.has(normalizar(atual)))nomes.set(normalizar(atual),atual);
  select.innerHTML='<option value="">Selecione uma categoria</option>'+ [...nomes.values()].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');
@@ -255,13 +255,13 @@ function configurarCategoriaFormulario(atual=''){
  select.hidden=false;select.required=true;document.getElementById('categoria-nova').required=false;const botao=document.getElementById('categoria-alternar');botao.textContent='+';botao.setAttribute('aria-label','Criar nova categoria');
 }
 document.getElementById('categoria-alternar').addEventListener('click',()=>{
- const select=formEntry.elements.categoria,input=document.getElementById('categoria-nova'),novo=input.hidden;
+ const select=formEntry.elements.namedItem('categoria'),input=document.getElementById('categoria-nova'),novo=input.hidden;
  input.hidden=!novo;select.hidden=novo;select.required=!novo;input.required=novo;
  if(novo){input.value='';input.focus()}else input.value='';
  const b=document.getElementById('categoria-alternar');b.textContent=novo?'↩':'+';b.setAttribute('aria-label',novo?'Selecionar categoria existente':'Criar nova categoria');
 });
 function configurarPagamentosFormulario(atual='') {
- const el=formEntry.elements.forma_pagamento;
+ const el=formEntry.elements.namedItem('forma_pagamento');
  const valores=new Map();
  for(const nome of nomesPagamentos()) valores.set(normalizar(nome),nome);
  // Preserva o valor de movimentações antigas mesmo após a exclusão da opção.
@@ -272,7 +272,7 @@ function configurarPagamentosFormulario(atual='') {
 }
 
 function configurarFontesFormulario(atual=''){
- const el=formEntry.elements.fonte_pagamento;
+ const el=formEntry.elements.namedItem('fonte_pagamento');
  const valores=new Map(fontesPersonalizadas.map(f=>[normalizar(f.nome),f.nome]));
  if(atual&&!valores.has(normalizar(atual)))valores.set(normalizar(atual),atual);
  el.innerHTML='<option value="">Sem fonte informada</option>'+[...valores.values()].map(v=>'<option value="'+escapar(v)+'">'+escapar(v)+'</option>').join('');
