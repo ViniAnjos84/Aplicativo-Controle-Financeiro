@@ -384,3 +384,12 @@
 .security-summary[data-mfa-state="unknown"]{border-color:#46536a;background:#202938}
 .security-summary[data-mfa-state="unknown"] .security-summary-icon,.security-summary[data-mfa-state="unknown"] .security-state{background:#303c50;color:#c2cddd;border-color:#52617a}
 .security-summary[data-mfa-state="unknown"] .security-summary-copy span{color:#aebbd0}
+
+/* Exclusão em lote */
+.history-actions{flex-wrap:wrap}
+.history-actions [data-bulk-toggle]{color:#ff697d;border-color:#a9364c}
+.history-actions [data-bulk-toggle][aria-pressed="true"]{background:#502431;border-color:#ff697d;box-shadow:0 0 0 2px #ff697d33}
+.history-actions [data-bulk-confirm]{background:#a9364c;color:#fff;border:1px solid #a9364c;border-radius:8px;padding:9px 13px;min-height:38px;font:inherit;font-weight:600;cursor:pointer}
+.history-actions [data-bulk-confirm]:hover:not(:disabled){background:#c0445b;border-color:#c0445b}
+.history-actions [data-bulk-confirm]:disabled{opacity:.5;cursor:not-allowed}
+.history-actions [data-bulk-confirm][hidden]{display:none!important}
