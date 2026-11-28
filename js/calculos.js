@@ -7,7 +7,7 @@ function calcularResumo(dados){const saidas=dados.filter(m=>normalizar(m.tipo_mo
  credito:saidas.filter(m=>normalizar(m.forma_pagamento)==='credito').reduce((s,m)=>s+Number(m.valor),0),
  investimentos:saidas.filter(m=>normalizar(m.categoria)==='investimentos').reduce((s,m)=>s+Number(m.valor),0)
 }}
-function agruparCategorias(dados){const grupo={};dados.filter(m=>normalizar(m.tipo_movimentacao)==='saida').forEach(m=>{const k=m.categoria||'Sem categoria';grupo[k]=(grupo[k]||0)+Number(m.valor)});return Object.entries(grupo).sort((a,b)=>b[1]-a[1])}
+function agruparCategorias(dados){const grupo=new Map();dados.filter(m=>normalizar(m.tipo_movimentacao)==='saida').forEach(m=>{const k=m.categoria||'Sem categoria';grupo.set(k,(grupo.get(k)||0)+Number(m.valor))});return [...grupo.entries()].sort((a,b)=>b[1]-a[1])}
 
 function filtrarIntervalo(registros,ano,inicio,fim){return registros.filter(m=>m.data.slice(0,4)===String(ano)&&m.data.slice(5,7)>=inicio&&m.data.slice(5,7)<=fim).sort((a,b)=>b.data.localeCompare(a.data)||b.id-a.id)}
 function intervaloDiario(inicio,fim){return inicio===fim}
