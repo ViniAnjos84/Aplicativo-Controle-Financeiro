@@ -52,7 +52,7 @@ function configurarCategorias(){
  const categorias=[...new Map(dados.map(m=>[normalizar(m.categoria||'Sem categoria'),m.categoria||'Sem categoria'])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
  for(const id of ['categoria','credito-categoria']){
   const el=document.getElementById(id),selecionadas=valoresSelecionados(id);
-  el.innerHTML='<option value="todas">Todas as categorias</option>'+categorias.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');
+  el.innerHTML='<option value="sistema:todas">Todas as categorias</option>'+categorias.map(([k,v])=>'<option value="'+escapar('valor:'+k)+'">'+escapar(v)+'</option>').join('');
   for(const o of el.options)o.selected=selecionadas.includes(o.value);
   montarMultiFiltro(id);
  }
@@ -233,11 +233,11 @@ function configurarFiltrosExtras(){
    const valores=new Map();
    for(const m of dados){
     const valor=(m[atributo]||'').trim(),chave=normalizar(valor);
-    if(valor&&!valores.has(chave))valores.set(chave,valor);
+    if(valor&&!valores.has('valor:'+chave))valores.set('valor:'+chave,valor);
    }
-   if(campo==='fonte')valores.set('__sem_fonte__','Sem fonte informada');
+   if(campo==='fonte')valores.set('sistema:sem_fonte','Sem fonte informada');
    const opcoes=[...valores.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
-   el.innerHTML='<option value="todos">Todas as '+(campo==='fonte'?'fontes':'formas')+'</option>'+opcoes.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');
+   el.innerHTML='<option value="sistema:todas">Todas as '+(campo==='fonte'?'fontes':'formas')+'</option>'+opcoes.map(([k,v])=>'<option value="'+escapar(k)+'">'+escapar(v)+'</option>').join('');
    for(const o of el.options)o.selected=anteriores.includes(o.value);
    montarMultiFiltro(prefix+campo);
   }
@@ -246,7 +246,7 @@ function configurarFiltrosExtras(){
 function filtrarExtras(m,prefix){
  return opcaoSelecionada(prefix+'tipo',normalizar(m.tipo_movimentacao))
   &&opcaoSelecionada(prefix+'pagamento',normalizar(m.forma_pagamento))
-  &&opcaoSelecionada(prefix+'fonte',normalizar(m.fonte_pagamento||'')||'__sem_fonte__');
+  &&opcaoSelecionada(prefix+'fonte',normalizar(m.fonte_pagamento||''),!normalizar(m.fonte_pagamento||''));
 }
 for(const prefix of ['','credito-','invest-']){const controls=document.getElementById(prefix+'filter-controls'),botao=document.querySelector('[aria-controls="'+controls.id+'"]');botao.addEventListener('click',()=>{const aberto=botao.getAttribute('aria-expanded')==='true';botao.setAttribute('aria-expanded',String(!aberto));botao.setAttribute('aria-label',aberto?'Mostrar filtros':'Ocultar filtros');botao.title=aberto?'Mostrar filtros':'Ocultar filtros';controls.hidden=aberto});for(const campo of ['tipo','pagamento','fonte'])montarMultiFiltro(prefix+campo)}
 
@@ -299,12 +299,12 @@ for(const prefix of ['','credito-','invest-']){
  });
 }
 
-function valoresSelecionados(id){const el=document.getElementById(id);return el?[...el.selectedOptions].map(o=>o.value).filter(v=>v!=='todos'&&v!=='todas'):[]}
-function opcaoSelecionada(id,valor){const selecionados=valoresSelecionados(id);return !selecionados.length||selecionados.includes(valor)}
+function valoresSelecionados(id){const el=document.getElementById(id);return el?[...el.selectedOptions].map(o=>o.value).filter(v=>v!=='sistema:todas'):[]}
+function opcaoSelecionada(id,valor,semFonte=false){const selecionados=valoresSelecionados(id);return !selecionados.length||selecionados.includes(semFonte?'sistema:sem_fonte':'valor:'+valor)}
 function atualizarFiltroPorId(id){if(id.startsWith('credito-'))atualizarCredito(dados);else if(id.startsWith('invest-'))atualizarInvestimentos(dados);else atualizar()}
 function montarMultiFiltro(id){
  const el=document.getElementById(id),caixa=document.querySelector('[data-multi="'+id+'"]');if(!el||!caixa)return;
- const atuais=valoresSelecionados(id),opcoes=[...el.options].filter(o=>o.value!=='todos'&&o.value!=='todas'),todos=opcoes.length>0&&atuais.length===opcoes.length;
+ const atuais=valoresSelecionados(id),opcoes=[...el.options].filter(o=>o.value!=='sistema:todas'),todos=opcoes.length>0&&atuais.length===opcoes.length;
  caixa.querySelector('.multi-options').innerHTML='<label class="multi-all"><input type="checkbox" data-select-all '+(todos?'checked':'')+'><span>Marcar/desmarcar todos</span></label>'+opcoes.map(o=>'<label><input type="checkbox" value="'+escapar(o.value)+'" '+(atuais.includes(o.value)?'checked':'')+'><span>'+escapar(o.textContent)+'</span></label>').join('');
  caixa.querySelector('summary').textContent=atuais.length?(todos?'Todas as opções':atuais.length===1?(opcoes.find(o=>o.value===atuais[0])?.textContent||'1 selecionado'):atuais.length+' selecionados'):'Todas as opções';
 }
@@ -312,7 +312,7 @@ for(const caixa of document.querySelectorAll('[data-multi]')){
  caixa.addEventListener('change',e=>{
   if(!e.target.matches('input[type="checkbox"]'))return;
   const id=caixa.dataset.multi,el=document.getElementById(id);
-  if(e.target.matches('[data-select-all]')){for(const o of el.options)o.selected=o.value!=='todos'&&o.value!=='todas'&&e.target.checked}
+  if(e.target.matches('[data-select-all]')){for(const o of el.options)o.selected=o.value!=='sistema:todas'&&e.target.checked}
   else{const valores=[...caixa.querySelectorAll('input:checked:not([data-select-all])')].map(i=>i.value);for(const o of el.options)o.selected=valores.includes(o.value)}
   montarMultiFiltro(id);atualizarFiltroPorId(id);
  });
